@@ -1,0 +1,148 @@
+plugins {
+    id "java"
+    id "org.springframework.boot" version "3.1.3"
+    id "io.spring.dependency-management" version "1.1.3"
+
+    id "org.owasp.dependencycheck" version "8.4.0"
+    id "checkstyle"
+    id "pmd"
+}
+
+// Checks Dependencies for Known Vulnerabilities
+dependencyCheck {
+    suppressionFile = file("${project.rootDir}/config/dependency_check/suppressions.xml")
+    failBuildOnCVSS = 7.0 // fails on high and critical severity scores
+}
+
+// Java Code Style Checker Following (mostly) Google Style Guidelines
+checkstyle {
+    toolVersion = "10.12.2"
+    configFile = file("${project.rootDir}/config/checkstyle/google_checks.xml")
+    configProperties = [ "suppressionFile" : project(':').file('config/checkstyle/suppressions.xml')]
+}
+
+// Java PMD for Enforcing Several Code Quality Measures
+pmd {
+    consoleOutput = true
+    rulesMinimumPriority = 5
+    ruleSetFiles = files("config/pmd/bestpractices.xml", "config/pmd/codestyle.xml", "config/pmd/design.xml",
+            "config/pmd/documentation.xml", "config/pmd/errorprone.xml", "config/pmd/multithreading.xml",
+            "config/pmd/performance.xml", "config/pmd/security.xml")
+    toolVersion = "6.55.+"
+}
+group = 'org.grouphq'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+bootBuildImage {
+    imageName = "${project.name}"
+    environment = ["BP_JVM_VERSION" : "17.*"]
+}
+
+ext {
+    set('springCloudVersion', "2022.0.4")
+}
+
+dependencies {
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+//    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+    implementation 'org.springframework.cloud:spring-cloud-stream'
+    implementation 'org.springframework.cloud:spring-cloud-stream-binder-rabbit'
+    implementation 'io.projectreactor:reactor-tools'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.amqp:spring-rabbit-test'
+    testImplementation 'org.springframework.cloud:spring-cloud-stream-test-binder'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // Dependencies needed for Cucumber
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation(platform("io.cucumber:cucumber-bom:7.13.0"))
+    testImplementation("io.cucumber:cucumber-java")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine")
+    testImplementation("org.junit.platform:junit-platform-suite")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("io.cucumber:cucumber-spring")
+
+    // Lombok Dependencies
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    testCompileOnly 'org.projectlombok:lombok:1.18.28'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+}
+
+tasks.register("testUnit", Test) {
+    useJUnitPlatform {
+        includeTags("UnitTest")
+    }
+
+    filter {
+        // prevents the Cucumber Suite from loading in and running Cucumber tests
+        excludeTestsMatching("org.grouphq.groupsync.cucumber.*")
+    }
+
+    maxParallelForks = 4 // don"t run for tests that interact with the file system. Unit tests should be fine
+}
+
+tasks.register("testIntegration", Test) {
+    useJUnitPlatform {
+        includeTags("IntegrationTest")
+    }
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
+
+    filter {
+        // prevents the Cucumber Suite from loading in and running Cucumber tests
+        excludeTestsMatching("org.grouphq.groupsync.cucumber.*")
+    }
+}
+
+tasks.register("testAcceptance", Test) {
+    useJUnitPlatform {
+        excludeTags("UnitTest")
+        excludeTags("IntegrationTest")
+    }
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
+
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+}
