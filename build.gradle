@@ -66,6 +66,8 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-stream-binder-rabbit'
     implementation 'io.projectreactor:reactor-tools'
 
+    implementation "io.sentry:sentry-spring-boot-starter-jakarta:6.28.0"
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 

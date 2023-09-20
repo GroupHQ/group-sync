@@ -1,0 +1,35 @@
+sentry:
+  dsn: https://9fc07fdf536634533ad6956ca8f45d1e@o4505767793524736.ingest.sentry.io/4505767799095296
+  # Set traces-sample-rate to 1.0 to capture 100% of transactions for performance monitoring.
+  # We recommend adjusting this value in production.
+  traces-sample-rate: 1.0
+server:
+  port: 9001
+  shutdown: graceful
+  netty:
+    connection-timeout: 2s
+    idle-timeout: 15s
+
+spring:
+  application:
+    name: group-sync
+  lifecycle:
+    timeout-per-shutdown-phase: 15s
+  cloud:
+    function:
+      definition: forwardProcessedEvents;
+    stream:
+      bindings:
+        forwardProcessedEvents-in-0:
+          destination: group-event-results
+          group: ${spring.application.name}
+  rabbitmq:
+    host: {$SPRING_RABBITMQ_HOST:localhost}
+    port: 5672
+    username: user
+    password: password
+    connection-timeout: 5s
+logging:
+  level:
+    root: info
+    org.grouphq: debug
