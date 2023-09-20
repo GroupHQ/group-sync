@@ -77,6 +77,7 @@ dependencies {
     testImplementation 'org.springframework.amqp:spring-rabbit-test'
     testImplementation 'org.springframework.cloud:spring-cloud-stream-test-binder'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.squareup.okhttp3:mockwebserver'
 
     // Dependencies needed for Cucumber
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
