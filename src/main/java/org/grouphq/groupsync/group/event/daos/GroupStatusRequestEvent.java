@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
-import org.grouphq.groupservice.group.domain.groups.GroupStatus;
+import org.grouphq.groupsync.group.domain.groups.GroupStatus;
 
 /**
  * Data class for the group status request event.
