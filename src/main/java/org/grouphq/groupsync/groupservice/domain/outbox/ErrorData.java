@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.group.domain.outbox;
+package org.grouphq.groupsync.groupservice.domain.outbox;
 
 /**
  * Data class for the error field in the outbox.

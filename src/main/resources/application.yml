@@ -4,12 +4,13 @@ sentry:
   # We recommend adjusting this value in production.
   traces-sample-rate: 1.0
 server:
-  port: 9001
+  port: 9002
   shutdown: graceful
   netty:
     connection-timeout: 2s
     idle-timeout: 15s
-
+grouphq:
+  group-service-uri: http://localhost:9001
 spring:
   application:
     name: group-sync

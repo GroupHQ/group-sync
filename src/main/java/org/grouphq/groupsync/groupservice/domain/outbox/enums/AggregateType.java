@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.group.domain.outbox.enums;
+package org.grouphq.groupsync.groupservice.domain.outbox.enums;
 
 /**
  * Enumerates the types of aggregates that can be used in the outbox.

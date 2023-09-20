@@ -1,10 +1,10 @@
-package org.grouphq.groupsync.group.event.daos;
+package org.grouphq.groupsync.groupservice.event.daos;
 
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
-import org.grouphq.groupsync.group.domain.groups.GroupStatus;
+import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 
 /**
  * Data class for the group status request event.

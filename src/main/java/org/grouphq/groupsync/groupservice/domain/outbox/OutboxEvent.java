@@ -1,14 +1,14 @@
-package org.grouphq.groupsync.group.domain.outbox;
+package org.grouphq.groupsync.groupservice.domain.outbox;
 
 import java.time.Instant;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.grouphq.groupsync.group.domain.outbox.enums.AggregateType;
-import org.grouphq.groupsync.group.domain.outbox.enums.EventStatus;
-import org.grouphq.groupsync.group.domain.outbox.enums.EventType;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
+
 /**
  * Model for the outbox table.
  * <p>Note that both the NoArgsConstructor and the AllArgsConstructor are required.

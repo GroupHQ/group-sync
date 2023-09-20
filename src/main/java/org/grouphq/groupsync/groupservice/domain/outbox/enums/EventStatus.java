@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.group.domain.outbox.enums;
+package org.grouphq.groupsync.groupservice.domain.outbox.enums;
 
 /**
  * Enumerates the status of an event.

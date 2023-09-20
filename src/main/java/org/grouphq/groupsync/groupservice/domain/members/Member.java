@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.group.domain.members;
+package org.grouphq.groupsync.groupservice.domain.members;
 
 import java.time.Instant;
 

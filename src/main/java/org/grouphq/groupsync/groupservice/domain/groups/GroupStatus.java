@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.group.domain.groups;
+package org.grouphq.groupsync.groupservice.domain.groups;
 
 /**
  * A group's current status.

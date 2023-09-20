@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.group.domain.members;
+package org.grouphq.groupsync.groupservice.domain.members;
 
 /**
  * A member's current status in a group.
