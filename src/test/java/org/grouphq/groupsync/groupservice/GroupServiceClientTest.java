@@ -8,9 +8,11 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
+import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.testutility.GroupTestUtility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -44,6 +46,7 @@ public class GroupServiceClientTest {
     }
 
     @Test
+    @DisplayName("When there are active groups, then return a list of active groups")
     void whenActiveGroupsExistThenReturnActiveGroups() throws JsonProcessingException {
         Group[] testGroups = {
             GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE),
@@ -63,6 +66,30 @@ public class GroupServiceClientTest {
         StepVerifier.create(groups)
             .expectNext(testGroups[0])
             .expectNext(testGroups[1])
+            .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("When there are group members, then return a list of group members")
+    void whenGroupMembersExistThenReturnGroupMembers() throws JsonProcessingException {
+        Member[] testMembers = {
+            GroupTestUtility.generateFullMemberDetails("Member A", 1L),
+            GroupTestUtility.generateFullMemberDetails("Member B", 1L)
+        };
+
+        var membersAsJson = objectMapper.writeValueAsString(testMembers);
+
+        var mockResponse = new MockResponse()
+            .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(membersAsJson);
+
+        mockWebServer.enqueue(mockResponse);
+
+        Flux<Member> members = groupServiceClient.getGroupMembers(1L);
+
+        StepVerifier.create(members)
+            .expectNext(testMembers[0])
+            .expectNext(testMembers[1])
             .verifyComplete();
     }
 }

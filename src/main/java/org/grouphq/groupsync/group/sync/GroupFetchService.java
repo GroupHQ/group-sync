@@ -2,6 +2,7 @@ package org.grouphq.groupsync.group.sync;
 
 import org.grouphq.groupsync.groupservice.GroupServiceClient;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
+import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -16,5 +17,9 @@ public class GroupFetchService {
 
     public Flux<Group> getGroups() {
         return groupServiceClient.getGroups();
+    }
+
+    public Flux<Member> getGroupMembers(Long groupId) {
+        return groupServiceClient.getGroupMembers(groupId);
     }
 }
