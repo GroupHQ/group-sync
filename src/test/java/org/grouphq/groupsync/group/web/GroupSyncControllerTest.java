@@ -17,13 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 
 @WebFluxTest(GroupSyncController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, RSocketMessageHandler.class})
 @Tag("IntegrationTest")
-public class GroupSyncControllerIntegrationTest {
+class GroupSyncControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;

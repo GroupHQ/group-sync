@@ -20,7 +20,7 @@ import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("UnitTest")
-public class GroupFetchServiceTest {
+class GroupFetchServiceTest {
 
     @Mock
     private GroupServiceClient groupServiceClient;

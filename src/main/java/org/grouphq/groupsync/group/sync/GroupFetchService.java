@@ -6,6 +6,9 @@ import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+/**
+ * Fetches groups and group members from the group service.
+ */
 @Service
 public class GroupFetchService {
 

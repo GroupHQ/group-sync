@@ -15,7 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 public class CucumberSpringConfiguration {
 
     /**
-     * The MockBean annotation only works in the @CucumberContextConfiguration annotated class
+     * The MockBean annotation only works in the @CucumberContextConfiguration annotated class.
      *
      * @see <a href="https://stackoverflow.com/a/75922258">See this link for more details.</a>
      */

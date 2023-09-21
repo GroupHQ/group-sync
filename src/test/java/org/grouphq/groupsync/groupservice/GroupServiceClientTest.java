@@ -22,7 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 @Tag("UnitTest")
-public class GroupServiceClientTest {
+class GroupServiceClientTest {
     private MockWebServer mockWebServer;
     private GroupServiceClient groupServiceClient;
     private ObjectMapper objectMapper;
@@ -34,7 +34,7 @@ public class GroupServiceClientTest {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
 
-        var webClient = WebClient.builder()
+        final var webClient = WebClient.builder()
             .baseUrl(mockWebServer.url("/").uri().toString())
             .build();
         this.groupServiceClient = new GroupServiceClient(webClient);
@@ -48,20 +48,20 @@ public class GroupServiceClientTest {
     @Test
     @DisplayName("When there are active groups, then return a list of active groups")
     void whenActiveGroupsExistThenReturnActiveGroups() throws JsonProcessingException {
-        Group[] testGroups = {
+        final Group[] testGroups = {
             GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE),
             GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE)
         };
 
-        var groupsAsJson = objectMapper.writeValueAsString(testGroups);
+        final var groupsAsJson = objectMapper.writeValueAsString(testGroups);
 
-        var mockResponse = new MockResponse()
+        final var mockResponse = new MockResponse()
             .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .setBody(groupsAsJson);
 
         mockWebServer.enqueue(mockResponse);
 
-        Flux<Group> groups = groupServiceClient.getGroups();
+        final Flux<Group> groups = groupServiceClient.getGroups();
 
         StepVerifier.create(groups)
             .expectNext(testGroups[0])
@@ -72,20 +72,20 @@ public class GroupServiceClientTest {
     @Test
     @DisplayName("When there are group members, then return a list of group members")
     void whenGroupMembersExistThenReturnGroupMembers() throws JsonProcessingException {
-        Member[] testMembers = {
+        final Member[] testMembers = {
             GroupTestUtility.generateFullMemberDetails("Member A", 1L),
             GroupTestUtility.generateFullMemberDetails("Member B", 1L)
         };
 
-        var membersAsJson = objectMapper.writeValueAsString(testMembers);
+        final var membersAsJson = objectMapper.writeValueAsString(testMembers);
 
-        var mockResponse = new MockResponse()
+        final var mockResponse = new MockResponse()
             .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .setBody(membersAsJson);
 
         mockWebServer.enqueue(mockResponse);
 
-        Flux<Member> members = groupServiceClient.getGroupMembers(1L);
+        final Flux<Member> members = groupServiceClient.getGroupMembers(1L);
 
         StepVerifier.create(members)
             .expectNext(testMembers[0])
