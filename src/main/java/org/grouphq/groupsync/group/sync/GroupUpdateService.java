@@ -9,13 +9,13 @@ import reactor.core.publisher.Sinks;
  * Manages a sink of outbox events as a hot flux.
  */
 @Service
-public class GroupSyncService {
+public class GroupUpdateService {
 
     private final Sinks.Many<OutboxEvent> outboxEventFluxSink;
 
     private final Flux<OutboxEvent> outboxEventFlux;
 
-    public GroupSyncService() {
+    public GroupUpdateService() {
         outboxEventFluxSink = Sinks.many().multicast().onBackpressureBuffer();
         outboxEventFlux = outboxEventFluxSink.asFlux();
     }

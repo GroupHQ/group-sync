@@ -19,11 +19,12 @@ import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.messaging.Message;
+import reactor.test.StepVerifier;
 
 @SpringBootTest
 @Import(TestChannelBinderConfiguration.class)
 @Tag("IntegrationTest")
-public class GroupEventPublisherIntegrationTest {
+class GroupEventPublisherIntegrationTest {
 
     @Autowired
     private OutputDestination outputDestination;
@@ -49,11 +50,14 @@ public class GroupEventPublisherIntegrationTest {
     @Test
     @DisplayName("Publishes group create requests")
     void publishesGroupCreateRequests() {
-        var groupCreateRequest = GroupTestUtility.generateGroupCreateRequestEvent();
+        final var groupCreateRequest = GroupTestUtility.generateGroupCreateRequestEvent();
 
-        groupEventPublisher.publishGroupCreateRequest(groupCreateRequest);
+        StepVerifier
+            .create(groupEventPublisher.publishGroupCreateRequest(groupCreateRequest))
+            .verifyComplete();
 
-        Message<byte[]> message = outputDestination.receive(1000, groupCreateRequestDestination);
+        final Message<byte[]> message =
+            outputDestination.receive(1000, groupCreateRequestDestination);
 
         assertThat(message).isNotNull();
         assertThat(objectMapper.convertValue(groupCreateRequest, GroupCreateRequestEvent.class))
@@ -63,26 +67,33 @@ public class GroupEventPublisherIntegrationTest {
     @Test
     @DisplayName("Publishes group update status requests")
     void publishesGroupUpdateStatusRequests() {
-        var groupStatusRequestEvent =
+        final var groupStatusRequestEvent =
             GroupTestUtility.generateGroupStatusRequestEvent(1L, GroupStatus.DISBANDED);
 
-        groupEventPublisher.publishGroupUpdateStatusRequest(groupStatusRequestEvent);
+        StepVerifier
+            .create(groupEventPublisher.publishGroupUpdateStatusRequest(groupStatusRequestEvent))
+            .verifyComplete();
 
-        Message<byte[]> message = outputDestination.receive(1000, groupUpdateStatusRequestDestination);
+        final Message<byte[]> message =
+            outputDestination.receive(1000, groupUpdateStatusRequestDestination);
 
         assertThat(message).isNotNull();
-        assertThat(objectMapper.convertValue(groupStatusRequestEvent, GroupStatusRequestEvent.class))
+        assertThat(
+            objectMapper.convertValue(groupStatusRequestEvent, GroupStatusRequestEvent.class))
             .isEqualTo(groupStatusRequestEvent);
     }
 
     @Test
     @DisplayName("Publishes group join requests")
     void publishesGroupJoinRequests() {
-        var groupJoinRequestEvent = GroupTestUtility.generateGroupJoinRequestEvent();
+        final var groupJoinRequestEvent = GroupTestUtility.generateGroupJoinRequestEvent();
 
-        groupEventPublisher.publishGroupJoinRequest(groupJoinRequestEvent);
+        StepVerifier
+            .create(groupEventPublisher.publishGroupJoinRequest(groupJoinRequestEvent))
+            .verifyComplete();
 
-        Message<byte[]> message = outputDestination.receive(1000, groupJoinRequestDestination);
+        final Message<byte[]> message =
+            outputDestination.receive(1000, groupJoinRequestDestination);
 
         assertThat(message).isNotNull();
         assertThat(objectMapper.convertValue(groupJoinRequestEvent, GroupJoinRequestEvent.class))
@@ -92,11 +103,14 @@ public class GroupEventPublisherIntegrationTest {
     @Test
     @DisplayName("Publishes group leave requests")
     void publishesGroupLeaveRequests() {
-        var groupLeaveRequestEvent = GroupTestUtility.generateGroupLeaveRequestEvent();
+        final var groupLeaveRequestEvent = GroupTestUtility.generateGroupLeaveRequestEvent();
 
-        groupEventPublisher.publishGroupLeaveRequest(groupLeaveRequestEvent);
+        StepVerifier
+            .create(groupEventPublisher.publishGroupLeaveRequest(groupLeaveRequestEvent))
+            .verifyComplete();
 
-        Message<byte[]> message = outputDestination.receive(1000, groupLeaveRequestDestination);
+        final Message<byte[]> message =
+            outputDestination.receive(1000, groupLeaveRequestDestination);
 
         assertThat(message).isNotNull();
         assertThat(objectMapper.convertValue(groupLeaveRequestEvent, GroupLeaveRequestEvent.class))

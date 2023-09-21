@@ -40,7 +40,8 @@ class GroupEventForwarderIntegrationTest {
             GroupTestUtility.generateOutboxEvent()
         };
 
-        final Flux<OutboxEvent> groupUpdatesStream = groupSyncSocketController.getOutboxEventUpdates()
+        final Flux<OutboxEvent> groupUpdatesStream =
+            groupSyncSocketController.getOutboxEventUpdates()
             .doOnSubscribe(subscription -> {
                 inputDestination.send(new GenericMessage<>(outboxEvents[0]), eventDestination);
                 inputDestination.send(new GenericMessage<>(outboxEvents[1]), eventDestination);

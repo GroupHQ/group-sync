@@ -14,10 +14,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
+import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("UnitTest")
-public class GroupEventPublisherTest {
+class GroupEventPublisherTest {
 
     @Mock
     private StreamBridge streamBridge;
@@ -40,11 +41,12 @@ public class GroupEventPublisherTest {
     @Test
     @DisplayName("Publishes group create requests")
     void publishesGroupCreateRequests() {
-        var groupCreateRequest = GroupTestUtility.generateGroupCreateRequestEvent();
+        final var groupCreateRequest = GroupTestUtility.generateGroupCreateRequestEvent();
         given(streamBridge.send(groupCreateRequestDestination, groupCreateRequest))
             .willReturn(true);
 
-        groupEventPublisher.publishGroupCreateRequest(groupCreateRequest);
+        StepVerifier.create(groupEventPublisher.publishGroupCreateRequest(groupCreateRequest))
+            .verifyComplete();
 
         verify(streamBridge).send(groupCreateRequestDestination, groupCreateRequest);
     }
@@ -52,12 +54,14 @@ public class GroupEventPublisherTest {
     @Test
     @DisplayName("Publishes group update status requests")
     void publishesGroupUpdateStatusRequests() {
-        var groupStatusRequestEvent =
+        final var groupStatusRequestEvent =
             GroupTestUtility.generateGroupStatusRequestEvent(1L, GroupStatus.DISBANDED);
         given(streamBridge.send(groupUpdateStatusRequestDestination, groupStatusRequestEvent))
             .willReturn(true);
 
-        groupEventPublisher.publishGroupUpdateStatusRequest(groupStatusRequestEvent);
+        StepVerifier
+            .create(groupEventPublisher.publishGroupUpdateStatusRequest(groupStatusRequestEvent))
+            .verifyComplete();
 
         verify(streamBridge).send(groupUpdateStatusRequestDestination, groupStatusRequestEvent);
     }
@@ -65,11 +69,13 @@ public class GroupEventPublisherTest {
     @Test
     @DisplayName("Publishes group join requests")
     void publishesGroupJoinRequests() {
-        var groupJoinRequestEvent = GroupTestUtility.generateGroupJoinRequestEvent();
+        final var groupJoinRequestEvent = GroupTestUtility.generateGroupJoinRequestEvent();
         given(streamBridge.send(groupJoinRequestDestination, groupJoinRequestEvent))
             .willReturn(true);
 
-        groupEventPublisher.publishGroupJoinRequest(groupJoinRequestEvent);
+        StepVerifier
+            .create(groupEventPublisher.publishGroupJoinRequest(groupJoinRequestEvent))
+            .verifyComplete();
 
         verify(streamBridge).send(groupJoinRequestDestination, groupJoinRequestEvent);
     }
@@ -77,11 +83,13 @@ public class GroupEventPublisherTest {
     @Test
     @DisplayName("Publishes group leave requests")
     void publishesGroupLeaveRequests() {
-        var groupLeaveRequestEvent = GroupTestUtility.generateGroupLeaveRequestEvent();
+        final var groupLeaveRequestEvent = GroupTestUtility.generateGroupLeaveRequestEvent();
         given(streamBridge.send(groupLeaveRequestDestination, groupLeaveRequestEvent))
             .willReturn(true);
 
-        groupEventPublisher.publishGroupLeaveRequest(groupLeaveRequestEvent);
+        StepVerifier
+            .create(groupEventPublisher.publishGroupLeaveRequest(groupLeaveRequestEvent))
+            .verifyComplete();
 
         verify(streamBridge).send(groupLeaveRequestDestination, groupLeaveRequestEvent);
     }

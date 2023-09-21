@@ -7,7 +7,11 @@ import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
+/**
+ * Publishes group events to the group event streams.
+ */
 @Component
 public class GroupEventPublisher {
     private final StreamBridge streamBridge;
@@ -28,19 +32,24 @@ public class GroupEventPublisher {
         this.streamBridge = streamBridge;
     }
 
-    public void publishGroupCreateRequest(GroupCreateRequestEvent groupCreateRequest) {
-        streamBridge.send(groupCreateRequestDestination, groupCreateRequest);
+    public Mono<Void> publishGroupCreateRequest(GroupCreateRequestEvent groupCreateRequest) {
+        return Mono.fromRunnable(() ->
+            streamBridge.send(groupCreateRequestDestination, groupCreateRequest));
     }
 
-    public void publishGroupUpdateStatusRequest(GroupStatusRequestEvent groupUpdateStatusRequest) {
-        streamBridge.send(groupUpdateStatusRequestDestination, groupUpdateStatusRequest);
+    public Mono<Void> publishGroupUpdateStatusRequest(
+        GroupStatusRequestEvent groupUpdateStatusRequest) {
+        return Mono.fromRunnable(() ->
+            streamBridge.send(groupUpdateStatusRequestDestination, groupUpdateStatusRequest));
     }
 
-    public void publishGroupJoinRequest(GroupJoinRequestEvent groupJoinRequest) {
-        streamBridge.send(groupJoinRequestDestination, groupJoinRequest);
+    public Mono<Void> publishGroupJoinRequest(GroupJoinRequestEvent groupJoinRequest) {
+        return Mono.fromRunnable(() ->
+           streamBridge.send(groupJoinRequestDestination, groupJoinRequest));
     }
 
-    public void publishGroupLeaveRequest(GroupLeaveRequestEvent groupLeaveRequest) {
-        streamBridge.send(groupLeaveRequestDestination, groupLeaveRequest);
+    public Mono<Void> publishGroupLeaveRequest(GroupLeaveRequestEvent groupLeaveRequest) {
+        return Mono.fromRunnable(() ->
+            streamBridge.send(groupLeaveRequestDestination, groupLeaveRequest));
     }
 }

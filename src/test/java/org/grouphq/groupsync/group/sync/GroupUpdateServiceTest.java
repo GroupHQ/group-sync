@@ -11,19 +11,19 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 @Tag("UnitTest")
-class GroupSyncServiceTest {
+class GroupUpdateServiceTest {
 
-    private final GroupSyncService groupSyncService;
+    private final GroupUpdateService groupUpdateService;
 
-    public GroupSyncServiceTest() {
-        groupSyncService = new GroupSyncService();
+    public GroupUpdateServiceTest() {
+        groupUpdateService = new GroupUpdateService();
     }
 
     @Test
     @DisplayName("Returns a flux for updates")
     void returnsSinkForUpdates() {
-        assertThat(groupSyncService.outboxEventUpdateStream()).isNotNull();
-        assertThat(groupSyncService.outboxEventUpdateStream()).isInstanceOfAny(Flux.class);
+        assertThat(groupUpdateService.outboxEventUpdateStream()).isNotNull();
+        assertThat(groupUpdateService.outboxEventUpdateStream()).isInstanceOfAny(Flux.class);
     }
 
     @Test
@@ -31,8 +31,8 @@ class GroupSyncServiceTest {
     void updatesSinkWithNewOutboxEventsAndEmitsThem() {
         final OutboxEvent outboxEvent = new OutboxEvent();
 
-        StepVerifier.create(groupSyncService.outboxEventUpdateStream())
-            .then(() -> groupSyncService.sendOutboxEventUpdate(outboxEvent))
+        StepVerifier.create(groupUpdateService.outboxEventUpdateStream())
+            .then(() -> groupUpdateService.sendOutboxEventUpdate(outboxEvent))
             .expectNext(outboxEvent)
             .thenCancel()
             .verify(Duration.ofSeconds(1));
