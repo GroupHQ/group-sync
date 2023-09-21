@@ -1,11 +1,11 @@
 package org.grouphq.groupsync.group.web;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.net.URI;
 import java.time.Duration;
-import java.util.ArrayList;
+import org.grouphq.groupsync.group.event.GroupEventPublisher;
+import org.grouphq.groupsync.group.sync.GroupUpdateService;
+import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupCreateRequestEvent;
@@ -13,188 +13,173 @@ import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupLeaveRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
 import org.grouphq.groupsync.testutility.GroupTestUtility;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.cloud.stream.binder.test.InputDestination;
-import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
-import org.springframework.context.annotation.Import;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.rsocket.RSocketRequester;
-import org.springframework.messaging.support.GenericMessage;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestChannelBinderConfiguration.class)
-@Tag("IntegrationTest")
+@ExtendWith(MockitoExtension.class)
+@Tag("UnitTest")
 class GroupSyncSocketControllerTest {
 
-    private static RSocketRequester requester;
+    @Mock
+    private GroupUpdateService groupUpdateService;
 
-    @Autowired
-    private OutputDestination outputDestination;
+    @Mock
+    private GroupEventPublisher groupEventPublisher;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private GroupSyncSocketController groupSyncSocketController;
 
-    @Value("${spring.cloud.stream.bindings.processedEvents-in-0.destination}")
-    private String eventDestination;
+    private static final String INTERNAL_SERVER_ERROR_SUFFIX = """
+             because the server has encountered an unexpected error.
+            Rest assured, this will be investigated.
+            """;
+    private static final String DUMMY_MESSAGE = "This message should NOT be returned!";
 
-    @Value("${spring.cloud.stream.bindings.groupCreateRequests-out-0.destination}")
-    private String groupCreateRequestDestination;
-
-    @Value("${spring.cloud.stream.bindings.groupStatusRequests-out-0.destination}")
-    private String groupUpdateStatusRequestDestination;
-
-    @Value("${spring.cloud.stream.bindings.groupJoinRequests-out-0.destination}")
-    private String groupJoinRequestDestination;
-
-    @Value("${spring.cloud.stream.bindings.groupLeaveRequests-out-0.destination}")
-    private String groupLeaveRequestDestination;
-
-    @BeforeAll
-    public static void setupOnce(@Autowired RSocketRequester.Builder builder,
-                                 @LocalServerPort Integer port) {
-        final URI url = URI.create("ws://localhost:" + port + "/rsocket");
-        requester = builder.websocket(url);
-    }
-
-    @AfterAll
-    public static void tearDownOnce() {
-        requester.rsocketClient().dispose();
-    }
-
-    /**
-     * Note the doOnSubscribe hook used here to cause the sink to emit events for the flux to
-     * consume. We cannot use the then() operator to create the signals, since that is not
-     * guaranteed to run in the order specified when used in a StepVerifier.
-     *
-     * @see <a href="https://github.com/reactor/reactor-core/issues/2139#issuecomment-624654710">
-     *     Related Issue</a>
-     */
     @Test
-    @DisplayName("Test RSocket integration with group updates")
-    void testSocketIntegrationWithGroupUpdates(@Autowired InputDestination inputDestination) {
-        final OutboxEvent[] outboxEvents = {
-            GroupTestUtility.generateOutboxEvent(),
-            GroupTestUtility.generateOutboxEvent(),
-            GroupTestUtility.generateOutboxEvent()
-        };
+    @DisplayName("Test RSocket integration for streaming outbox events")
+    void testGetOutboxEventUpdates() {
+        final OutboxEvent event = GroupTestUtility.generateOutboxEvent();
 
-        final Flux<OutboxEvent> groupUpdatesStream = requester
-            .route("groups.updates")
-            .retrieveFlux(OutboxEvent.class)
-            .doOnSubscribe(subscription -> {
-                inputDestination.send(new GenericMessage<>(outboxEvents[0]), eventDestination);
-                inputDestination.send(new GenericMessage<>(outboxEvents[1]), eventDestination);
-                inputDestination.send(new GenericMessage<>(outboxEvents[2]), eventDestination);
-            });
+        // Mimic a stream of events, followed by an error that should be ignored
+        // The stream should continue after the error
+        final Flux<OutboxEvent> eventEmitter = Flux.concat(
+            Flux.interval(Duration.ofMillis(100))
+                .map(tick -> event)
+                .take(2),
+            Mono.error(new RuntimeException("This message should not cause the stream to stop")),
+            Flux.interval(Duration.ofMillis(100))
+                .map(tick -> event)
+        );
 
-        StepVerifier.create(groupUpdatesStream)
-            .recordWith(ArrayList::new)
-            .expectNextCount(3)
-            .consumeRecordedWith(received -> {
-                assertThat(received).hasSize(3);
-                assertThat(received).containsExactlyInAnyOrder(outboxEvents);
-            })
+        given(groupUpdateService.outboxEventUpdateStream()).willReturn(eventEmitter);
+
+        StepVerifier.create(groupSyncSocketController.getOutboxEventUpdates())
+            .expectNext(event)
+            .expectNext(event)
+            .expectNext(event)
             .thenCancel()
-            .verify(Duration.ofSeconds(5));
+            .verify();
     }
 
     @Test
-    @DisplayName("Test RSocket integration with group creation requests")
-    void testSocketIntegrationWithGroupCreationRequests() {
-        final var createRequestEvent = GroupTestUtility.generateGroupCreateRequestEvent();
+    @DisplayName("Test RSocket integration for creating a group")
+    void testCreateGroup() {
+        final GroupCreateRequestEvent event = GroupTestUtility.generateGroupCreateRequestEvent();
 
-        final Mono<Void> groupCreateRequest = requester
-            .route("groups.create")
-            .data(createRequestEvent)
-            .retrieveMono(Void.class);
+        given(groupEventPublisher.publishGroupCreateRequest(event)).willReturn(Mono.empty());
 
-        StepVerifier.create(groupCreateRequest)
-            .verifyComplete();
-
-        final Message<byte[]> message =
-            outputDestination.receive(1000, groupCreateRequestDestination);
-
-        assertThat(message).isNotNull();
-        assertThat(
-            objectMapper.convertValue(createRequestEvent, GroupCreateRequestEvent.class))
-            .isEqualTo(createRequestEvent);
+        StepVerifier.create(groupSyncSocketController.createGroup(event))
+            .expectComplete()
+            .verify();
     }
 
     @Test
-    @DisplayName("Test RSocket integration with group status update requests")
-    void testSocketIntegrationWithGroupStatusRequests() {
-        final var groupStatusRequestEvent =
+    @DisplayName("Test RSocket integration for updating a group status")
+    void testUpdateGroupStatus() {
+        final GroupStatusRequestEvent event =
             GroupTestUtility.generateGroupStatusRequestEvent(1L, GroupStatus.DISBANDED);
 
-        final Mono<Void> groupStatusRequest = requester
-            .route("groups.status")
-            .data(groupStatusRequestEvent)
-            .retrieveMono(Void.class);
+        given(groupEventPublisher.publishGroupUpdateStatusRequest(event)).willReturn(Mono.empty());
 
-        StepVerifier.create(groupStatusRequest)
-            .verifyComplete();
-
-        final Message<byte[]> message =
-            outputDestination.receive(1000, groupUpdateStatusRequestDestination);
-
-        assertThat(message).isNotNull();
-        assertThat(
-            objectMapper.convertValue(groupStatusRequestEvent, GroupStatusRequestEvent.class))
-            .isEqualTo(groupStatusRequestEvent);
+        StepVerifier.create(groupSyncSocketController.updateGroupStatus(event))
+            .expectComplete()
+            .verify();
     }
 
     @Test
-    @DisplayName("Test RSocket integration with group join requests")
-    void testSocketIntegrationWithGroupJoinRequests() {
-        final var groupJoinRequestEvent = GroupTestUtility.generateGroupJoinRequestEvent();
+    @DisplayName("Test RSocket integration for joining a group")
+    void testJoinGroup() {
+        final GroupJoinRequestEvent event = GroupTestUtility.generateGroupJoinRequestEvent();
 
-        final Mono<Void> groupJoinRequest = requester
-            .route("groups.join")
-            .data(groupJoinRequestEvent)
-            .retrieveMono(Void.class);
+        given(groupEventPublisher.publishGroupJoinRequest(event)).willReturn(Mono.empty());
 
-        StepVerifier.create(groupJoinRequest)
-            .verifyComplete();
-
-        final Message<byte[]> message =
-            outputDestination.receive(1000, groupJoinRequestDestination);
-
-        assertThat(message).isNotNull();
-        assertThat(
-            objectMapper.convertValue(groupJoinRequestEvent, GroupJoinRequestEvent.class))
-            .isEqualTo(groupJoinRequestEvent);
+        StepVerifier.create(groupSyncSocketController.joinGroup(event))
+            .expectComplete()
+            .verify();
     }
 
     @Test
-    @DisplayName("Test RSocket integration with group leave requests")
-    void testSocketIntegrationWithGroupLeaveRequests() {
-        final var groupLeaveRequestEvent = GroupTestUtility.generateGroupLeaveRequestEvent();
+    @DisplayName("Test RSocket integration for leaving a group")
+    void testLeaveGroup() {
+        final GroupLeaveRequestEvent event = GroupTestUtility.generateGroupLeaveRequestEvent();
 
-        final Mono<Void> groupLeaveRequest = requester
-            .route("groups.leave")
-            .data(groupLeaveRequestEvent)
-            .retrieveMono(Void.class);
+        given(groupEventPublisher.publishGroupLeaveRequest(event)).willReturn(Mono.empty());
 
-        StepVerifier.create(groupLeaveRequest)
-            .verifyComplete();
+        StepVerifier.create(groupSyncSocketController.leaveGroup(event))
+            .expectComplete()
+            .verify();
+    }
 
-        final Message<byte[]> message =
-            outputDestination.receive(1000, groupLeaveRequestDestination);
+    @Test
+    @DisplayName("Test RSocket integration for returning an error when creating a group")
+    void testCreateGroupError() {
+        final GroupCreateRequestEvent event = GroupTestUtility.generateGroupCreateRequestEvent();
 
-        assertThat(message).isNotNull();
-        assertThat(objectMapper.convertValue(groupLeaveRequestEvent, GroupLeaveRequestEvent.class))
-            .isEqualTo(groupLeaveRequestEvent);
+        given(groupEventPublisher.publishGroupCreateRequest(event))
+            .willReturn(Mono.error(new RuntimeException(DUMMY_MESSAGE)));
+
+        final String expectedErrorString = "Cannot create group" + INTERNAL_SERVER_ERROR_SUFFIX;
+
+        StepVerifier.create(groupSyncSocketController.createGroup(event))
+            .expectErrorMatches(throwable -> throwable instanceof InternalServerError
+                && throwable.getMessage().equals(expectedErrorString))
+            .verify();
+    }
+
+    @Test
+    @DisplayName("Test RSocket integration for returning an error when updating a group status")
+    void testUpdateGroupStatusError() {
+        final GroupStatusRequestEvent event =
+            GroupTestUtility.generateGroupStatusRequestEvent(1L, GroupStatus.DISBANDED);
+
+        given(groupEventPublisher.publishGroupUpdateStatusRequest(event))
+            .willReturn(Mono.error(new RuntimeException(DUMMY_MESSAGE)));
+
+        final String expectedErrorString = "Cannot update group status" + INTERNAL_SERVER_ERROR_SUFFIX;
+
+        StepVerifier.create(groupSyncSocketController.updateGroupStatus(event))
+            .expectErrorMatches(throwable -> throwable instanceof InternalServerError
+                && throwable.getMessage().equals(expectedErrorString))
+            .verify();
+    }
+
+    @Test
+    @DisplayName("Test RSocket integration for returning an error when joining a group")
+    void testJoinGroupError() {
+        final GroupJoinRequestEvent event = GroupTestUtility.generateGroupJoinRequestEvent();
+
+        given(groupEventPublisher.publishGroupJoinRequest(event))
+            .willReturn(Mono.error(new RuntimeException(DUMMY_MESSAGE)));
+
+        final String expectedErrorString = "Cannot join group" + INTERNAL_SERVER_ERROR_SUFFIX;
+
+        StepVerifier.create(groupSyncSocketController.joinGroup(event))
+            .expectErrorMatches(throwable -> throwable instanceof InternalServerError
+                && throwable.getMessage().equals(expectedErrorString))
+            .verify();
+    }
+
+    @Test
+    @DisplayName("Test RSocket integration for returning an error when leaving a group")
+    void testLeaveGroupError() {
+        final GroupLeaveRequestEvent event = GroupTestUtility.generateGroupLeaveRequestEvent();
+
+        given(groupEventPublisher.publishGroupLeaveRequest(event))
+            .willReturn(Mono.error(new RuntimeException(DUMMY_MESSAGE)));
+
+        final String expectedErrorString = "Cannot leave group" + INTERNAL_SERVER_ERROR_SUFFIX;
+
+        StepVerifier.create(groupSyncSocketController.leaveGroup(event))
+            .expectErrorMatches(throwable -> throwable instanceof InternalServerError
+                && throwable.getMessage().equals(expectedErrorString))
+            .verify();
     }
 }

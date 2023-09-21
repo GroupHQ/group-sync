@@ -11,4 +11,11 @@ public class InternalServerError extends RuntimeException {
             Rest assured, this will be investigated.
             """);
     }
+
+    public InternalServerError(String action) {
+        super(action + """
+             because the server has encountered an unexpected error.
+            Rest assured, this will be investigated.
+            """);
+    }
 }
