@@ -32,9 +32,7 @@ class GroupSyncServiceTest {
         final OutboxEvent outboxEvent = new OutboxEvent();
 
         StepVerifier.create(groupSyncService.outboxEventUpdateStream())
-            .then(() -> {
-                groupSyncService.sendOutboxEventUpdate(outboxEvent);
-            })
+            .then(() -> groupSyncService.sendOutboxEventUpdate(outboxEvent))
             .expectNext(outboxEvent)
             .thenCancel()
             .verify(Duration.ofSeconds(1));

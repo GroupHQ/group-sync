@@ -34,7 +34,7 @@ class GroupSyncSocketControllerTest {
     @Autowired
     private InputDestination inputDestination;
 
-    @Value("${spring.cloud.stream.bindings.forwardProcessedEvents-in-0.destination}")
+    @Value("${spring.cloud.stream.bindings.processedEvents-in-0.destination}")
     private String eventDestination;
 
     @BeforeAll
@@ -49,6 +49,14 @@ class GroupSyncSocketControllerTest {
         requester.rsocketClient().dispose();
     }
 
+    /**
+     * Note the doOnSubscribe hook used here to cause the sink to emit events for the flux to
+     * consume. We cannot use the then() operator to create the signals, since that is not
+     * guaranteed to run in the order specified when used in a StepVerifier.
+     *
+     * @see <a href="https://github.com/reactor/reactor-core/issues/2139#issuecomment-624654710">
+     *     Related Issue</a>
+     */
     @Test
     @DisplayName("Test RSocket integration with group updates")
     void testSocketIntegrationWithGroupUpdates() {

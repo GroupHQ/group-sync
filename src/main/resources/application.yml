@@ -18,10 +18,27 @@ spring:
     timeout-per-shutdown-phase: 15s
   cloud:
     function:
-      definition: forwardProcessedEvents;
+      definition: |
+        publishGroupCreateRequests;
+        publishGroupStatusRequests;
+        publishGroupJoinRequests;
+        publishGroupLeaveRequests;
+        processedEvents
     stream:
       bindings:
-        forwardProcessedEvents-in-0:
+        groupCreateRequests-out-0:
+          destination: group-create-requests
+          group: ${spring.application.name}
+        groupStatusRequests-out-0:
+          destination: group-status-requests
+          group: ${spring.application.name}
+        groupJoinRequests-out-0:
+          destination: group-join-requests
+          group: ${spring.application.name}
+        groupLeaveRequests-out-0:
+          destination: group-leave-requests
+          group: ${spring.application.name}
+        processedEvents-in-0:
           destination: group-event-results
           group: ${spring.application.name}
   rabbitmq:

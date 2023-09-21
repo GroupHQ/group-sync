@@ -32,7 +32,7 @@ class GroupEventForwarderTest {
 
         willDoNothing().given(groupSyncService).sendOutboxEventUpdate(outboxEvent);
 
-        groupEventForwarder.forwardProcessedEvents().accept(Flux.just(outboxEvent));
+        groupEventForwarder.processedEvents().accept(Flux.just(outboxEvent));
 
         verify(groupSyncService).sendOutboxEventUpdate(outboxEvent);
     }

@@ -22,7 +22,7 @@ public class GroupEventForwarder {
     }
 
     @Bean
-    public Consumer<Flux<OutboxEvent>> forwardProcessedEvents() {
+    public Consumer<Flux<OutboxEvent>> processedEvents() {
         return outboxEvents ->
             outboxEvents.doOnNext(groupSyncService::sendOutboxEventUpdate)
                 .doOnError(throwable -> log.error("Error while forwarding events. "

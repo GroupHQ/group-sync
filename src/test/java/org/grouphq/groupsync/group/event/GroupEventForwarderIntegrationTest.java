@@ -28,7 +28,7 @@ class GroupEventForwarderIntegrationTest {
     @Autowired
     private GroupSyncSocketController groupSyncSocketController;
 
-    @Value("${spring.cloud.stream.bindings.forwardProcessedEvents-in-0.destination}")
+    @Value("${spring.cloud.stream.bindings.processedEvents-in-0.destination}")
     private String eventDestination;
 
     @Test
