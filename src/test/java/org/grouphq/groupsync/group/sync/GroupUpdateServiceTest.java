@@ -20,19 +20,38 @@ class GroupUpdateServiceTest {
     }
 
     @Test
-    @DisplayName("Returns a flux for updates")
+    @DisplayName("Returns a flux for successful events")
     void returnsSinkForUpdates() {
         assertThat(groupUpdateService.outboxEventUpdateStream()).isNotNull();
         assertThat(groupUpdateService.outboxEventUpdateStream()).isInstanceOfAny(Flux.class);
     }
 
     @Test
-    @DisplayName("Updates sink with new outbox events and emits them")
+    @DisplayName("Updates sink with successful events and emits them")
     void updatesSinkWithNewOutboxEventsAndEmitsThem() {
         final OutboxEvent outboxEvent = new OutboxEvent();
 
         StepVerifier.create(groupUpdateService.outboxEventUpdateStream())
             .then(() -> groupUpdateService.sendOutboxEventUpdate(outboxEvent))
+            .expectNext(outboxEvent)
+            .thenCancel()
+            .verify(Duration.ofSeconds(1));
+    }
+
+    @Test
+    @DisplayName("Returns a flux for failed events")
+    void returnsSinkForFailedUpdates() {
+        assertThat(groupUpdateService.outboxEventFailedUpdateStream()).isNotNull();
+        assertThat(groupUpdateService.outboxEventFailedUpdateStream()).isInstanceOfAny(Flux.class);
+    }
+
+    @Test
+    @DisplayName("Updates sink with failed events and emits them")
+    void updatesSinkWithFailedOutboxEventsAndEmitsThem() {
+        final OutboxEvent outboxEvent = new OutboxEvent();
+
+        StepVerifier.create(groupUpdateService.outboxEventFailedUpdateStream())
+            .then(() -> groupUpdateService.sendOutboxEventUpdateFailed(outboxEvent))
             .expectNext(outboxEvent)
             .thenCancel()
             .verify(Duration.ofSeconds(1));

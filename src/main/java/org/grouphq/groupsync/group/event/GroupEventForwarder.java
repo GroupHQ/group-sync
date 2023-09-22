@@ -7,6 +7,7 @@ import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Forwards outbox events from the event broker to a flux managed by GroupUpdateService.
@@ -24,10 +25,20 @@ public class GroupEventForwarder {
     @Bean
     public Consumer<Flux<OutboxEvent>> processedEvents() {
         return outboxEvents ->
-            outboxEvents.doOnNext(groupUpdateService::sendOutboxEventUpdate)
+            outboxEvents.flatMap(this::forwardUpdate)
                 .doOnError(throwable -> log.error("Error while forwarding events. "
                                                   + "Attempting to resume.", throwable))
                 .onErrorResume(throwable -> Flux.empty())
                 .subscribe();
+    }
+
+    private Mono<Void> forwardUpdate(OutboxEvent outboxEvent) {
+        switch (outboxEvent.getEventStatus()) {
+            case SUCCESSFUL -> groupUpdateService.sendOutboxEventUpdate(outboxEvent);
+            case FAILED -> groupUpdateService.sendOutboxEventUpdateFailed(outboxEvent);
+            default -> log.error("Unknown event status: {}", outboxEvent.getEventStatus());
+        }
+
+        return Mono.empty();
     }
 }

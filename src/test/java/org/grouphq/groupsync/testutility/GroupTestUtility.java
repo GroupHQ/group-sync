@@ -346,4 +346,22 @@ public final class GroupTestUtility {
             Instant.now()
         );
     }
+
+    /**
+     * Overloaded method for {@link #generateOutboxEvent()}.
+     */
+    public static OutboxEvent generateOutboxEvent(String webSocketId, EventStatus eventStatus) {
+        final Faker faker = new Faker();
+
+        return new OutboxEvent(
+            UUID.randomUUID(),
+            faker.number().randomNumber(12, true),
+            webSocketId,
+            AggregateType.GROUP,
+            EventType.GROUP_CREATED,
+            "{\"status\": \"ACTIVE\"}",
+            eventStatus,
+            Instant.now()
+        );
+    }
 }

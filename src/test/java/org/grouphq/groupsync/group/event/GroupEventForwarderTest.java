@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.testutility.GroupTestUtility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -26,9 +27,10 @@ class GroupEventForwarderTest {
     private GroupEventForwarder groupEventForwarder;
 
     @Test
-    @DisplayName("Forwards events to the sink")
-    void forwardsEventsToTheSink() {
-        final OutboxEvent outboxEvent = GroupTestUtility.generateOutboxEvent();
+    @DisplayName("Forwards successful events to the 'updates' sink")
+    void forwardsSuccessfulEventsToTheUpdatesSink() {
+        final OutboxEvent outboxEvent =
+            GroupTestUtility.generateOutboxEvent("ID", EventStatus.SUCCESSFUL);
 
         willDoNothing().given(groupUpdateService).sendOutboxEventUpdate(outboxEvent);
 
@@ -36,4 +38,18 @@ class GroupEventForwarderTest {
 
         verify(groupUpdateService).sendOutboxEventUpdate(outboxEvent);
     }
+
+    @Test
+    @DisplayName("Forwards failed events to the 'failed updates' sink")
+    void forwardsFailedEventsToTheUpdatesFailedSink() {
+        final OutboxEvent outboxEvent =
+            GroupTestUtility.generateOutboxEvent("ID", EventStatus.FAILED);
+
+        willDoNothing().given(groupUpdateService).sendOutboxEventUpdateFailed(outboxEvent);
+
+        groupEventForwarder.processedEvents().accept(Flux.just(outboxEvent));
+
+        verify(groupUpdateService).sendOutboxEventUpdateFailed(outboxEvent);
+    }
+
 }

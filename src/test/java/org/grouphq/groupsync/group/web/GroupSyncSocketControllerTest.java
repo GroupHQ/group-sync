@@ -8,6 +8,7 @@ import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.event.daos.GroupCreateRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupLeaveRequestEvent;
@@ -20,11 +21,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import reactor.core.publisher.Flux;
+import org.springframework.security.test.context.annotation.SecurityTestExecutionListeners;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, SpringExtension.class})
+@SecurityTestExecutionListeners
 @Tag("UnitTest")
 class GroupSyncSocketControllerTest {
 
@@ -41,32 +46,52 @@ class GroupSyncSocketControllerTest {
              because the server has encountered an unexpected error.
             Rest assured, this will be investigated.
             """;
-    private static final String DUMMY_MESSAGE = "This message should NOT be returned!";
+    private static final String DUMMY_MESSAGE = "This message should NOT be returned to the user!";
 
     @Test
-    @DisplayName("Test RSocket integration for streaming outbox events")
+    @DisplayName("Test streaming outbox events to all clients")
     void testGetOutboxEventUpdates() {
         final OutboxEvent event = GroupTestUtility.generateOutboxEvent();
 
         // Mimic a stream of events, followed by an error that should be ignored
         // The stream should continue after the error
-        final Flux<OutboxEvent> eventEmitter = Flux.concat(
-            Flux.interval(Duration.ofMillis(100))
-                .map(tick -> event)
-                .take(2),
-            Mono.error(new RuntimeException("This message should not cause the stream to stop")),
-            Flux.interval(Duration.ofMillis(100))
-                .map(tick -> event)
-        );
+        final Sinks.Many<OutboxEvent> sink = Sinks.many().multicast().onBackpressureBuffer();
+        sink.tryEmitNext(event);
+        sink.tryEmitNext(event);
+        sink.tryEmitNext(event);
 
-        given(groupUpdateService.outboxEventUpdateStream()).willReturn(eventEmitter);
+        given(groupUpdateService.outboxEventUpdateStream()).willReturn(sink.asFlux());
 
         StepVerifier.create(groupSyncSocketController.getOutboxEventUpdates())
             .expectNext(event)
             .expectNext(event)
             .expectNext(event)
             .thenCancel()
-            .verify();
+            .verify(Duration.ofSeconds(1));
+    }
+
+    @Test
+    @WithMockUser(username = "Banana")
+    @DisplayName("Test streaming outbox events to the client who made the request")
+    void testGetOutboxEventUpdatesFailed() {
+        final OutboxEvent[] events = {
+            GroupTestUtility.generateOutboxEvent("Apricot", EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEvent("Banana", EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEvent("Cherry", EventStatus.FAILED)
+        };
+
+        // Mimic a stream of events
+        final Sinks.Many<OutboxEvent> sink = Sinks.many().multicast().onBackpressureBuffer();
+        sink.tryEmitNext(events[0]);
+        sink.tryEmitNext(events[1]);
+        sink.tryEmitNext(events[2]);
+
+        given(groupUpdateService.outboxEventFailedUpdateStream()).willReturn(sink.asFlux());
+
+        StepVerifier.create(groupSyncSocketController.getOutboxEventUpdatesFailed())
+            .expectNext(events[1])
+            .thenCancel()
+            .verify(Duration.ofSeconds(1));
     }
 
     @Test
