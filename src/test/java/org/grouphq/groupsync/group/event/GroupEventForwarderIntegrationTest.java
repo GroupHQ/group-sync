@@ -1,6 +1,7 @@
 package org.grouphq.groupsync.group.event;
 
 import java.time.Duration;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.web.GroupSyncSocketController;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
@@ -38,23 +39,23 @@ class GroupEventForwarderIntegrationTest {
     @Test
     @DisplayName("Forwards events to the outbox event update successful sink")
     void forwardsEventsToTheOutboxEventUpdateSink() {
-        final OutboxEvent[] outboxEvents = {
-            GroupTestUtility.generateOutboxEvent(),
-            GroupTestUtility.generateOutboxEvent(),
-            GroupTestUtility.generateOutboxEvent()
+        final PublicOutboxEvent[] publicEvents = {
+            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEvent()),
+            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEvent()),
+            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEvent())
         };
 
-        final Flux<OutboxEvent> groupUpdatesStream =
-            groupSyncSocketController.getOutboxEventUpdates()
+        final Flux<PublicOutboxEvent> groupUpdatesStream =
+            groupSyncSocketController.getPublicUpdates()
             .doOnSubscribe(subscription -> {
-                inputDestination.send(new GenericMessage<>(outboxEvents[0]), eventDestination);
-                inputDestination.send(new GenericMessage<>(outboxEvents[1]), eventDestination);
-                inputDestination.send(new GenericMessage<>(outboxEvents[2]), eventDestination);
+                inputDestination.send(new GenericMessage<>(publicEvents[0]), eventDestination);
+                inputDestination.send(new GenericMessage<>(publicEvents[1]), eventDestination);
+                inputDestination.send(new GenericMessage<>(publicEvents[2]), eventDestination);
             });
 
         // Subscribe to updates sink
         StepVerifier.create(groupUpdatesStream)
-            .expectNext(outboxEvents[0], outboxEvents[1], outboxEvents[2])
+            .expectNext(publicEvents[0], publicEvents[1], publicEvents[2])
             .thenCancel()
             .verify(Duration.ofSeconds(1));
     }
@@ -70,7 +71,7 @@ class GroupEventForwarderIntegrationTest {
         };
 
         final Flux<OutboxEvent> groupUpdatesStream =
-            groupSyncSocketController.getOutboxEventUpdatesFailed()
+            groupSyncSocketController.getEventOwnerUpdates()
             .doOnSubscribe(subscription -> {
                 inputDestination.send(new GenericMessage<>(outboxEvents[0]), eventDestination);
                 inputDestination.send(new GenericMessage<>(outboxEvents[1]), eventDestination);

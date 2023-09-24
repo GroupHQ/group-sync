@@ -1,6 +1,7 @@
 package org.grouphq.groupsync.group.web;
 
 import lombok.extern.slf4j.Slf4j;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
@@ -33,23 +34,38 @@ public class GroupSyncSocketController {
         this.groupEventPublisher = groupEventPublisher;
     }
 
+    @MessageMapping("connect")
+    public Mono<String> connect() {
+        return ReactiveSecurityContextHolder.getContext()
+            .map(SecurityContext::getAuthentication)
+            .map(authentication -> {
+                String username = authentication.getName();
+                log.info("User {} connected.", username);
+                log.info("Authentication is {}.", authentication);
+                return username;
+            });
+    }
+
     @MessageMapping("groups.updates.all")
-    public Flux<OutboxEvent> getOutboxEventUpdates() {
-        return groupUpdateService.outboxEventUpdateStream()
+    public Flux<PublicOutboxEvent> getPublicUpdates() {
+        return groupUpdateService.publicUpdatesStream()
+            .doOnCancel(() -> log.info("Cancelled streaming outbox events."))
+            .doOnComplete(() -> log.info("Stopped streaming outbox events."))
             .doOnError(throwable -> log.error("Error while streaming outbox events. "
                                               + "Stream will be terminated.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Update stream closed"));
     }
 
     @MessageMapping("groups.updates.user")
-    public Flux<OutboxEvent> getOutboxEventUpdatesFailed() {
-        return groupUpdateService.outboxEventFailedUpdateStream()
+    public Flux<OutboxEvent> getEventOwnerUpdates() {
+        return groupUpdateService.eventOwnerUpdateStream()
             .flatMap(outboxEvent -> isUserEventOwner(outboxEvent)
                 .flatMap(isOwner -> isOwner ? Mono.just(outboxEvent) : Mono.empty())
                 .doOnError(throwable -> log.error(
                     "Error while verifying user ownership on event: {}", outboxEvent, throwable))
                 .onErrorResume(throwable -> Mono.empty())
             )
+            .doOnComplete(() -> log.info("Stopped streaming outbox events to users."))
             .doOnError(throwable -> log.error("Error while streaming user outbox events. "
                                               + "Stream will be terminated.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("User update stream closed"));

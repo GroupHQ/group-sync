@@ -48,5 +48,5 @@ spring:
       transport: websocket
 logging:
   level:
-    root: info
+    root: debug
     org.grouphq: debug

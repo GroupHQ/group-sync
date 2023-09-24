@@ -3,6 +3,7 @@ package org.grouphq.groupsync.group.event;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.verify;
 
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
@@ -27,29 +28,33 @@ class GroupEventForwarderTest {
     private GroupEventForwarder groupEventForwarder;
 
     @Test
-    @DisplayName("Forwards successful events to the 'updates' sink")
+    @DisplayName("Forwards successful events to the to all users sink and the event owner sink")
     void forwardsSuccessfulEventsToTheUpdatesSink() {
         final OutboxEvent outboxEvent =
             GroupTestUtility.generateOutboxEvent("ID", EventStatus.SUCCESSFUL);
+        final PublicOutboxEvent publicOutboxEvent =
+            PublicOutboxEvent.convertOutboxEvent(outboxEvent);
 
-        willDoNothing().given(groupUpdateService).sendOutboxEventUpdate(outboxEvent);
+        willDoNothing().given(groupUpdateService).sendPublicOutboxEventToAll(publicOutboxEvent);
+        willDoNothing().given(groupUpdateService).sendOutboxEventToEventOwner(outboxEvent);
 
         groupEventForwarder.processedEvents().accept(Flux.just(outboxEvent));
 
-        verify(groupUpdateService).sendOutboxEventUpdate(outboxEvent);
+        verify(groupUpdateService).sendPublicOutboxEventToAll(publicOutboxEvent);
+        verify(groupUpdateService).sendOutboxEventToEventOwner(outboxEvent);
     }
 
     @Test
-    @DisplayName("Forwards failed events to the 'failed updates' sink")
+    @DisplayName("Forwards failed events to only the event owner sink")
     void forwardsFailedEventsToTheUpdatesFailedSink() {
         final OutboxEvent outboxEvent =
             GroupTestUtility.generateOutboxEvent("ID", EventStatus.FAILED);
 
-        willDoNothing().given(groupUpdateService).sendOutboxEventUpdateFailed(outboxEvent);
+        willDoNothing().given(groupUpdateService).sendOutboxEventToEventOwner(outboxEvent);
 
         groupEventForwarder.processedEvents().accept(Flux.just(outboxEvent));
 
-        verify(groupUpdateService).sendOutboxEventUpdateFailed(outboxEvent);
+        verify(groupUpdateService).sendOutboxEventToEventOwner(outboxEvent);
     }
 
 }

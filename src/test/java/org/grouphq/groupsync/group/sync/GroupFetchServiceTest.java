@@ -3,7 +3,6 @@ package org.grouphq.groupsync.group.sync;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import org.grouphq.groupsync.groupservice.GroupServiceClient;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.members.Member;

@@ -1,6 +1,7 @@
 package org.grouphq.groupsync.group.sync;
 
 import lombok.extern.slf4j.Slf4j;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.springframework.stereotype.Service;
@@ -14,32 +15,31 @@ import reactor.core.publisher.Sinks;
 @Service
 public class GroupUpdateService {
 
-    private final Sinks.Many<OutboxEvent> updatesSink;
-    private final Flux<OutboxEvent> updatesFlux;
+    private final Sinks.Many<PublicOutboxEvent> publicUpdatesSink;
+    private final Flux<PublicOutboxEvent> publicUpdatesFlux;
 
-    private final Sinks.Many<OutboxEvent> failedUpdatesSink;
-    private final Flux<OutboxEvent> failedUpdatesFlux;
+    private final Sinks.Many<OutboxEvent> userUpdatesSink;
+    private final Flux<OutboxEvent> userUpdatesFlux;
 
     public GroupUpdateService() {
-        updatesSink = Sinks.many().multicast().onBackpressureBuffer();
-        updatesFlux = updatesSink.asFlux();
+        publicUpdatesSink = Sinks.many().multicast().onBackpressureBuffer();
+        publicUpdatesFlux = publicUpdatesSink.asFlux();
 
-        failedUpdatesSink = Sinks.many().multicast().onBackpressureBuffer();
-        failedUpdatesFlux = failedUpdatesSink.asFlux();
+        userUpdatesSink = Sinks.many().multicast().onBackpressureBuffer();
+        userUpdatesFlux = userUpdatesSink.asFlux();
     }
 
-
-    public Flux<OutboxEvent> outboxEventUpdateStream() {
-        return updatesFlux;
+    public Flux<PublicOutboxEvent> publicUpdatesStream() {
+        return publicUpdatesFlux.cache();
     }
 
-    public Flux<OutboxEvent> outboxEventFailedUpdateStream() {
-        return failedUpdatesFlux;
+    public Flux<OutboxEvent> eventOwnerUpdateStream() {
+        return userUpdatesFlux.cache();
     }
 
-    public void sendOutboxEventUpdate(OutboxEvent outboxEvent) {
+    public void sendPublicOutboxEventToAll(PublicOutboxEvent outboxEvent) {
         try {
-            Sinks.EmitResult result = updatesSink.tryEmitNext(outboxEvent);
+            Sinks.EmitResult result = publicUpdatesSink.tryEmitNext(outboxEvent);
             emitResultLogger(EventStatus.SUCCESSFUL.toString(), outboxEvent, result);
         } catch (Exception e) {
             log.error("Error while trying to emit outbox event to updates sink. Event: {}",
@@ -47,19 +47,18 @@ public class GroupUpdateService {
         }
     }
 
-    public void sendOutboxEventUpdateFailed(OutboxEvent outboxEvent) {
+    public void sendOutboxEventToEventOwner(OutboxEvent outboxEvent) {
         try {
-            Sinks.EmitResult result = failedUpdatesSink.tryEmitNext(outboxEvent);
+            Sinks.EmitResult result = userUpdatesSink.tryEmitNext(outboxEvent);
             emitResultLogger(EventStatus.FAILED.toString(), outboxEvent, result);
         } catch (Exception e) {
             log.error("Error while trying to emit outbox event to failed updates sink. Event: {}",
                 outboxEvent, e);
         }
-
     }
 
     private void emitResultLogger(String eventName,
-                                  OutboxEvent outboxEvent,
+                                  Object outboxEvent,
                                   Sinks.EmitResult result) {
         String resultString = switch (result) {
             case OK -> "OK";

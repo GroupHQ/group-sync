@@ -7,6 +7,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.UUID;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.testutility.GroupTestUtility;
@@ -74,7 +75,7 @@ public class GroupSyncSocketDirtyIntegrationTest {
      */
     @Test
     @DisplayName("Test RSocket integration for streaming successful outbox events to all users")
-    void testGetOutboxEventUpdates(@Autowired InputDestination inputDestination) {
+    void testGetPublicOutboxEventUpdates(@Autowired InputDestination inputDestination) {
         final OutboxEvent[] outboxEvents = {
             GroupTestUtility.generateOutboxEvent(userId, EventStatus.SUCCESSFUL),
             GroupTestUtility.generateOutboxEvent(userId, EventStatus.SUCCESSFUL),
@@ -84,14 +85,21 @@ public class GroupSyncSocketDirtyIntegrationTest {
             GroupTestUtility.generateOutboxEvent("Some other user", EventStatus.FAILED)
         };
 
-        final Flux<OutboxEvent> groupUpdatesStream = requester
+        final Flux<PublicOutboxEvent> groupUpdatesStream = requester
             .route("groups.updates.all")
-            .retrieveFlux(OutboxEvent.class)
+            .retrieveFlux(PublicOutboxEvent.class)
             .doOnSubscribe(subscription -> {
                 for (OutboxEvent outboxEvent : outboxEvents) {
                     inputDestination.send(new GenericMessage<>(outboxEvent), eventDestination);
                 }
             });
+
+        // Events we expect to receive back as public
+        PublicOutboxEvent[] publicEvents = {
+            PublicOutboxEvent.convertOutboxEvent(outboxEvents[0]),
+            PublicOutboxEvent.convertOutboxEvent(outboxEvents[1]),
+            PublicOutboxEvent.convertOutboxEvent(outboxEvents[2])
+        };
 
         StepVerifier.create(groupUpdatesStream)
             .recordWith(ArrayList::new)
@@ -99,15 +107,15 @@ public class GroupSyncSocketDirtyIntegrationTest {
             .consumeRecordedWith(received -> {
                 assertThat(received).hasSize(3);
                 assertThat(received)
-                    .containsExactlyInAnyOrder(outboxEvents[0], outboxEvents[1], outboxEvents[2]);
+                    .containsExactlyInAnyOrder(publicEvents[0], publicEvents[1], publicEvents[2]);
             })
             .thenCancel()
             .verify(Duration.ofSeconds(1));
     }
 
     @Test
-    @DisplayName("Test RSocket integration for streaming failed outbox events belonging to a user")
-    void testGetOutboxEventUpdatesFailed(@Autowired InputDestination inputDestination) {
+    @DisplayName("Test RSocket integration for streaming outbox events belonging to a user")
+    void testGetEventOwnerOutboxEventUpdates(@Autowired InputDestination inputDestination) {
         final OutboxEvent[] outboxEvents = {
             GroupTestUtility.generateOutboxEvent(userId, EventStatus.SUCCESSFUL),
             GroupTestUtility.generateOutboxEvent(userId, EventStatus.SUCCESSFUL),
@@ -128,10 +136,11 @@ public class GroupSyncSocketDirtyIntegrationTest {
 
         StepVerifier.create(groupUpdatesFailedStream)
             .recordWith(ArrayList::new)
-            .expectNextCount(2)
+            .expectNextCount(4)
             .consumeRecordedWith(received -> {
-                assertThat(received).hasSize(2);
-                assertThat(received).containsExactlyInAnyOrder(outboxEvents[3], outboxEvents[4]);
+                assertThat(received).hasSize(4);
+                assertThat(received).containsExactlyInAnyOrder(
+                    outboxEvents[0], outboxEvents[1], outboxEvents[3], outboxEvents[4]);
             })
             .thenCancel()
             .verify(Duration.ofSeconds(1));

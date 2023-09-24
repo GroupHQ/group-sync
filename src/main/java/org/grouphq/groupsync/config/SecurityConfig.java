@@ -1,6 +1,7 @@
 package org.grouphq.groupsync.config;
 
 import java.util.Collections;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.rsocket.messaging.RSocketStrategiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import reactor.core.publisher.Mono;
  * Configuration for Spring Security.
  */
 @Configuration
+@Slf4j
 @EnableRSocketSecurity
 @EnableWebFluxSecurity
 public class SecurityConfig {
@@ -37,10 +39,18 @@ public class SecurityConfig {
     @Bean
     public ReactiveAuthenticationManager reactiveAuthenticationManager() {
         return authentication -> {
-            String uuid = (String) authentication.getPrincipal();
+            String username = authentication.getName();
+            // after testing, check that all usernames are UUIDs
+//            try {
+//                UUID tryConversion = UUID.fromString(username);
+//            } catch (IllegalArgumentException e) {
+//                return Mono.error(new IllegalArgumentException("Invalid username: " + username));
+//            }
+//            String uuid = UUID.randomUUID().toString();
+            log.info("Creating Authentication Token with Username: {}", username);
 
             return Mono.just(new UsernamePasswordAuthenticationToken(
-                uuid,
+                username,
                 "dummy",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))
             ));
@@ -56,7 +66,6 @@ public class SecurityConfig {
     PayloadSocketAcceptorInterceptor rsocketInterceptor(RSocketSecurity socketSecurity) {
         socketSecurity.authorizePayload(authorize -> authorize
             .anyExchange().authenticated())
-        .authenticationManager(reactiveAuthenticationManager())
         .simpleAuthentication(Customizer.withDefaults());
 
         return socketSecurity.build();

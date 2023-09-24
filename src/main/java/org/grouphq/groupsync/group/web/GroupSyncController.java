@@ -28,6 +28,7 @@ public class GroupSyncController {
         return groupFetchService.getGroups();
     }
 
+    // return public member instead
     @GetMapping("/{groupId}/members")
     public Flux<Member> getGroupMembers(@PathVariable Long groupId) {
         return groupFetchService.getGroupMembers(groupId);

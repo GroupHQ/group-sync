@@ -3,6 +3,7 @@ package org.grouphq.groupsync.group.web;
 import static org.mockito.BDDMockito.given;
 
 import java.time.Duration;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
@@ -52,20 +53,21 @@ class GroupSyncSocketControllerTest {
     @DisplayName("Test streaming outbox events to all clients")
     void testGetOutboxEventUpdates() {
         final OutboxEvent event = GroupTestUtility.generateOutboxEvent();
+        final PublicOutboxEvent publicOutboxEvent = PublicOutboxEvent.convertOutboxEvent(event);
 
         // Mimic a stream of events, followed by an error that should be ignored
         // The stream should continue after the error
-        final Sinks.Many<OutboxEvent> sink = Sinks.many().multicast().onBackpressureBuffer();
-        sink.tryEmitNext(event);
-        sink.tryEmitNext(event);
-        sink.tryEmitNext(event);
+        final Sinks.Many<PublicOutboxEvent> sink = Sinks.many().multicast().onBackpressureBuffer();
+        sink.tryEmitNext(publicOutboxEvent);
+        sink.tryEmitNext(publicOutboxEvent);
+        sink.tryEmitNext(publicOutboxEvent);
 
-        given(groupUpdateService.outboxEventUpdateStream()).willReturn(sink.asFlux());
+        given(groupUpdateService.publicUpdatesStream()).willReturn(sink.asFlux());
 
-        StepVerifier.create(groupSyncSocketController.getOutboxEventUpdates())
-            .expectNext(event)
-            .expectNext(event)
-            .expectNext(event)
+        StepVerifier.create(groupSyncSocketController.getPublicUpdates())
+            .expectNext(publicOutboxEvent)
+            .expectNext(publicOutboxEvent)
+            .expectNext(publicOutboxEvent)
             .thenCancel()
             .verify(Duration.ofSeconds(1));
     }
@@ -86,9 +88,9 @@ class GroupSyncSocketControllerTest {
         sink.tryEmitNext(events[1]);
         sink.tryEmitNext(events[2]);
 
-        given(groupUpdateService.outboxEventFailedUpdateStream()).willReturn(sink.asFlux());
+        given(groupUpdateService.eventOwnerUpdateStream()).willReturn(sink.asFlux());
 
-        StepVerifier.create(groupSyncSocketController.getOutboxEventUpdatesFailed())
+        StepVerifier.create(groupSyncSocketController.getEventOwnerUpdates())
             .expectNext(events[1])
             .thenCancel()
             .verify(Duration.ofSeconds(1));

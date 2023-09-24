@@ -134,6 +134,7 @@ public final class GroupTestUtility {
 
         return new Member(
             faker.number().randomNumber(12, true),
+            UUID.randomUUID(),
             faker.name().firstName(),
             faker.number().randomNumber(12, true),
             MemberStatus.ACTIVE,
@@ -163,6 +164,7 @@ public final class GroupTestUtility {
 
         return new Member(
             faker.number().randomNumber(12, true),
+            UUID.randomUUID(),
             username,
             groupId,
             MemberStatus.ACTIVE,

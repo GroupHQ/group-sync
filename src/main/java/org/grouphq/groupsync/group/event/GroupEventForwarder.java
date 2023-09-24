@@ -2,6 +2,7 @@ package org.grouphq.groupsync.group.event;
 
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.springframework.context.annotation.Bean;
@@ -34,8 +35,12 @@ public class GroupEventForwarder {
 
     private Mono<Void> forwardUpdate(OutboxEvent outboxEvent) {
         switch (outboxEvent.getEventStatus()) {
-            case SUCCESSFUL -> groupUpdateService.sendOutboxEventUpdate(outboxEvent);
-            case FAILED -> groupUpdateService.sendOutboxEventUpdateFailed(outboxEvent);
+            case SUCCESSFUL -> {
+                groupUpdateService.sendPublicOutboxEventToAll(
+                    PublicOutboxEvent.convertOutboxEvent(outboxEvent));
+                groupUpdateService.sendOutboxEventToEventOwner(outboxEvent);
+            }
+            case FAILED -> groupUpdateService.sendOutboxEventToEventOwner(outboxEvent);
             default -> log.error("Unknown event status: {}", outboxEvent.getEventStatus());
         }
 

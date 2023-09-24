@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.groupservice;
+package org.grouphq.groupsync.group.sync;
 
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
