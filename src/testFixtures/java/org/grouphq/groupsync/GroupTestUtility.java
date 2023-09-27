@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.testutility;
+package org.grouphq.groupsync;
 
 import com.github.javafaker.Faker;
 import java.time.Instant;
@@ -217,6 +217,28 @@ public final class GroupTestUtility {
     }
 
     /**
+     * Overloaded method for {@link #generateGroupJoinRequestEvent()}.
+     *
+     * @param groupId the group ID the member is requesting to join.
+     * @param username the username of the member.
+     * @param websocketId the web socket ID of the member.
+     *
+     * @return a GroupJoinRequestEvent object with all details.
+     */
+    public static GroupJoinRequestEvent generateGroupJoinRequestEvent(
+        String websocketId, Long groupId, String username) {
+
+        final Faker faker = new Faker();
+
+        return new GroupJoinRequestEvent(
+            UUID.randomUUID(),
+            groupId,
+            username,
+            websocketId,
+            Instant.now()
+        );
+    }
+    /**
      * Generates a group leave request event.
      * Note that IDs are intentionally 12 digits so that
      * they'll always be considered a {@code long} type.
@@ -255,6 +277,28 @@ public final class GroupTestUtility {
             groupId,
             memberId,
             faker.number().digits(36),
+            Instant.now()
+        );
+    }
+
+    /**
+     * Overloaded method for {@link #generateGroupLeaveRequestEvent()}.
+     *
+     * @param groupId the group ID the member is requesting to leave.
+     * @param memberId the member ID that is requesting to leave the group.
+     * @param websocketId the websocket ID of the member.
+     *
+     * @return a GroupLeaveRequestEvent object with all details.
+     */
+
+    public static GroupLeaveRequestEvent generateGroupLeaveRequestEvent(
+        String websocketId, Long groupId, Long memberId) {
+
+        return new GroupLeaveRequestEvent(
+            UUID.randomUUID(),
+            groupId,
+            memberId,
+            websocketId,
             Instant.now()
         );
     }

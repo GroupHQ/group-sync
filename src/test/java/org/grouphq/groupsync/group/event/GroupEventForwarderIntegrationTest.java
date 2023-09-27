@@ -5,7 +5,7 @@ import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.web.GroupSyncSocketController;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
-import org.grouphq.groupsync.testutility.GroupTestUtility;
+import org.grouphq.groupsync.GroupTestUtility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

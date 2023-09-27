@@ -15,6 +15,6 @@ import org.junit.platform.suite.api.Suite;
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
 @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty")
-@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.grouphq.groupsync.cucumber")
+@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.grouphq.acceptancetesting.cucumber")
 public class RunCucumberTest {
 }

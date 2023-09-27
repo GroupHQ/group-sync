@@ -11,7 +11,7 @@ import org.grouphq.groupsync.groupservice.event.daos.GroupCreateRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupLeaveRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
-import org.grouphq.groupsync.testutility.GroupTestUtility;
+import org.grouphq.groupsync.GroupTestUtility;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

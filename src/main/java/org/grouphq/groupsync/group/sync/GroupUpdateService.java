@@ -40,7 +40,7 @@ public class GroupUpdateService {
     public void sendPublicOutboxEventToAll(PublicOutboxEvent outboxEvent) {
         try {
             Sinks.EmitResult result = publicUpdatesSink.tryEmitNext(outboxEvent);
-            emitResultLogger(EventStatus.SUCCESSFUL.toString(), outboxEvent, result);
+            emitResultLogger("PUBLIC", outboxEvent, result);
         } catch (Exception e) {
             log.error("Error while trying to emit outbox event to updates sink. Event: {}",
                 outboxEvent, e);
@@ -50,7 +50,7 @@ public class GroupUpdateService {
     public void sendOutboxEventToEventOwner(OutboxEvent outboxEvent) {
         try {
             Sinks.EmitResult result = userUpdatesSink.tryEmitNext(outboxEvent);
-            emitResultLogger(EventStatus.FAILED.toString(), outboxEvent, result);
+            emitResultLogger(outboxEvent.getEventStatus().toString(), outboxEvent, result);
         } catch (Exception e) {
             log.error("Error while trying to emit outbox event to failed updates sink. Event: {}",
                 outboxEvent, e);

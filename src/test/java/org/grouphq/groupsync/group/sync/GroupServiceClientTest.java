@@ -9,7 +9,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
-import org.grouphq.groupsync.testutility.GroupTestUtility;
+import org.grouphq.groupsync.GroupTestUtility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

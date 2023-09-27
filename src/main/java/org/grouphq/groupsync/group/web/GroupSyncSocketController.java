@@ -90,6 +90,7 @@ public class GroupSyncSocketController {
     @MessageMapping("groups.create")
     public Mono<Void> createGroup(GroupCreateRequestEvent groupCreateRequestEvent) {
         return groupEventPublisher.publishGroupCreateRequest(groupCreateRequestEvent)
+            .doOnSuccess(unused -> log.debug("Sent create group request."))
             .doOnError(throwable -> log.error("Error while creating group.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Cannot create group"));
     }
@@ -97,6 +98,7 @@ public class GroupSyncSocketController {
     @MessageMapping("groups.status")
     public Mono<Void> updateGroupStatus(GroupStatusRequestEvent groupStatusRequestEvent) {
         return groupEventPublisher.publishGroupUpdateStatusRequest(groupStatusRequestEvent)
+            .doOnSuccess(unused -> log.debug("Sent update group status request."))
             .doOnError(throwable -> log.error("Error while updating group status.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Cannot update group status"));
     }
@@ -104,6 +106,7 @@ public class GroupSyncSocketController {
     @MessageMapping("groups.join")
     public Mono<Void> joinGroup(GroupJoinRequestEvent groupJoinRequestEvent) {
         return groupEventPublisher.publishGroupJoinRequest(groupJoinRequestEvent)
+            .doOnSuccess(unused -> log.debug("Sent join request"))
             .doOnError(throwable -> log.error("Error while joining group.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Cannot join group"));
     }
@@ -111,6 +114,7 @@ public class GroupSyncSocketController {
     @MessageMapping("groups.leave")
     public Mono<Void> leaveGroup(GroupLeaveRequestEvent groupLeaveRequestEvent) {
         return groupEventPublisher.publishGroupLeaveRequest(groupLeaveRequestEvent)
+            .doOnSuccess(unused -> log.debug("Sent leave request"))
             .doOnError(throwable -> log.error("Error while leaving group.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Cannot leave group"));
     }
