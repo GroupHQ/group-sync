@@ -21,10 +21,10 @@ import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHa
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 
-@WebFluxTest(GroupSyncController.class)
+@WebFluxTest(GroupController.class)
 @Import({SecurityConfig.class, RSocketMessageHandler.class})
 @Tag("IntegrationTest")
-class GroupSyncControllerTest {
+class GroupControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;

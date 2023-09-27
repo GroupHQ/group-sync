@@ -1,6 +1,7 @@
 package org.grouphq.groupsync.config;
 
 import java.util.Collections;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.rsocket.messaging.RSocketStrategiesCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -41,16 +42,12 @@ public class SecurityConfig {
     public ReactiveAuthenticationManager reactiveAuthenticationManager() {
         return authentication -> {
             final String username = authentication.getName();
-            /* after testing, check that all usernames are UUIDs
+
             try {
-                UUID tryConversion = UUID.fromString(username);
+                UUID.fromString(username);
             } catch (IllegalArgumentException e) {
                 return Mono.error(new IllegalArgumentException("Invalid username: " + username));
             }
-
-            String uuid = UUID.randomUUID().toString();
-            */
-            log.info("Creating Authentication Token with Username: {}", username);
 
             return Mono.just(new UsernamePasswordAuthenticationToken(
                 username,

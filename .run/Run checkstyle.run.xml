@@ -10,8 +10,10 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value=":checkstyleMain" />
-          <option value=":checkstyleTest" />
+          <option value="checkstyleMain" />
+          <option value="checkstyleTest" />
+          <option value="checkstyleTestFixtures" />
+          <option value="checkstyleTestAcceptance" />
         </list>
       </option>
       <option name="vmOptions" />

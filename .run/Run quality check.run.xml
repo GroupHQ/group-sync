@@ -12,6 +12,8 @@
         <list>
           <option value="pmdMain" />
           <option value="pmdTest" />
+          <option value="pmdTestFixtures" />
+          <option value="pmdTestAcceptance" />
         </list>
       </option>
       <option name="vmOptions" />

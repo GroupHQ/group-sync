@@ -10,6 +10,12 @@ server:
     connection-timeout: 2s
     idle-timeout: 15s
 grouphq:
+  features:
+    groups:
+      create: false
+      status: false
+      join: true
+      leave: true
   group-service-uri: http://localhost:9001
 spring:
   application:

@@ -3,7 +3,7 @@ package org.grouphq.groupsync.group.event;
 import java.time.Duration;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
-import org.grouphq.groupsync.group.web.GroupSyncSocketController;
+import org.grouphq.groupsync.group.web.GroupSocketController;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +29,7 @@ class GroupEventForwarderIntegrationTest {
     private InputDestination inputDestination;
 
     @Autowired
-    private GroupSyncSocketController groupSyncSocketController;
+    private GroupSocketController groupSocketController;
 
     @Value("${spring.cloud.stream.bindings.processedEvents-in-0.destination}")
     private String eventDestination;
@@ -46,7 +46,7 @@ class GroupEventForwarderIntegrationTest {
         };
 
         final Flux<PublicOutboxEvent> groupUpdatesStream =
-            groupSyncSocketController.getPublicUpdates()
+            groupSocketController.getPublicUpdates()
             .doOnSubscribe(subscription -> {
                 inputDestination.send(new GenericMessage<>(publicEvents[0]), eventDestination);
                 inputDestination.send(new GenericMessage<>(publicEvents[1]), eventDestination);
@@ -71,7 +71,7 @@ class GroupEventForwarderIntegrationTest {
         };
 
         final Flux<OutboxEvent> groupUpdatesStream =
-            groupSyncSocketController.getEventOwnerUpdates()
+            groupSocketController.getEventOwnerUpdates()
             .doOnSubscribe(subscription -> {
                 inputDestination.send(new GenericMessage<>(outboxEvents[0]), eventDestination);
                 inputDestination.send(new GenericMessage<>(outboxEvents[1]), eventDestination);

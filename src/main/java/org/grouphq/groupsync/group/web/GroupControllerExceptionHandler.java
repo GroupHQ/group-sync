@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  * encountered by the application's controllers.
  */
 @ControllerAdvice
-public class GroupSyncExceptionHandler {
+public class GroupControllerExceptionHandler {
     @ExceptionHandler(InternalServerError.class)
     public ResponseEntity<String> handleInternalServerError(
         InternalServerError exception) {

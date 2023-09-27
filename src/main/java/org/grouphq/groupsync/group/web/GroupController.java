@@ -16,10 +16,10 @@ import reactor.core.publisher.Flux;
 @Slf4j
 @RestController
 @RequestMapping("groups")
-public class GroupSyncController {
+public class GroupController {
     private final GroupFetchService groupFetchService;
 
-    public GroupSyncController(GroupFetchService groupFetchService) {
+    public GroupController(GroupFetchService groupFetchService) {
         this.groupFetchService = groupFetchService;
     }
 
