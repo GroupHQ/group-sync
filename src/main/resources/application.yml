@@ -1,0 +1,58 @@
+sentry:
+  dsn: https://9fc07fdf536634533ad6956ca8f45d1e@o4505767793524736.ingest.sentry.io/4505767799095296
+  # Set traces-sample-rate to 1.0 to capture 100% of transactions for performance monitoring.
+  # We recommend adjusting this value in production.
+  traces-sample-rate: 1.0
+server:
+  port: 9002
+  shutdown: graceful
+  netty:
+    connection-timeout: 2s
+    idle-timeout: 15s
+grouphq:
+  features:
+    groups:
+      create: false
+      status: false
+      join: true
+      leave: true
+  group-service-uri: http://localhost:9001
+spring:
+  application:
+    name: group-sync
+  lifecycle:
+    timeout-per-shutdown-phase: 15s
+  cloud:
+    function:
+      definition: processedEvents
+    stream:
+      bindings:
+        groupCreateRequests-out-0:
+          destination: group-create-requests
+          group: ${spring.application.name}
+        groupStatusRequests-out-0:
+          destination: group-status-requests
+          group: ${spring.application.name}
+        groupJoinRequests-out-0:
+          destination: group-join-requests
+          group: ${spring.application.name}
+        groupLeaveRequests-out-0:
+          destination: group-leave-requests
+          group: ${spring.application.name}
+        processedEvents-in-0:
+          destination: group-event-results
+          group: ${spring.application.name}
+  rabbitmq:
+    host: {$SPRING_RABBITMQ_HOST:localhost}
+    port: 5672
+    username: user
+    password: password
+    connection-timeout: 5s
+  rsocket:
+    server:
+      mapping-path: /rsocket
+      transport: websocket
+logging:
+  level:
+    root: debug
+    org.grouphq: debug
