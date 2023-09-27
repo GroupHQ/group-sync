@@ -6,13 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.rsocket.metadata.WellKnownMimeType;
 import java.net.URI;
 import java.util.UUID;
+import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.event.daos.GroupCreateRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupLeaveRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
-import org.grouphq.groupsync.GroupTestUtility;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -53,18 +57,18 @@ class GroupSyncSocketControllerIntegrationTest {
     @Value("${spring.cloud.stream.bindings.groupLeaveRequests-out-0.destination}")
     private String groupLeaveRequestDestination;
 
-    private static final String userId = UUID.randomUUID().toString();
+    private static final String USER_ID = UUID.randomUUID().toString();
 
     @BeforeEach
     public void setup(@Autowired RSocketRequester.Builder builder,
                                  @LocalServerPort Integer port) {
         final URI url = URI.create("ws://localhost:" + port + "/rsocket");
 
-        UsernamePasswordMetadata credentials =
-            new UsernamePasswordMetadata(userId, "password");
+        final UsernamePasswordMetadata credentials =
+            new UsernamePasswordMetadata(USER_ID, "password");
 
-        MimeType authenticationMimeType =
-            MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString());
+        final MimeType authenticationMimeType = MimeTypeUtils.parseMimeType(
+                WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString());
 
         requester = builder
             .setupMetadata(credentials, authenticationMimeType)

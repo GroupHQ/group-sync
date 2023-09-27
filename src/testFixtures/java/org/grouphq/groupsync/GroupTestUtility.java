@@ -228,8 +228,6 @@ public final class GroupTestUtility {
     public static GroupJoinRequestEvent generateGroupJoinRequestEvent(
         String websocketId, Long groupId, String username) {
 
-        final Faker faker = new Faker();
-
         return new GroupJoinRequestEvent(
             UUID.randomUUID(),
             groupId,
@@ -238,6 +236,7 @@ public final class GroupTestUtility {
             Instant.now()
         );
     }
+
     /**
      * Generates a group leave request event.
      * Note that IDs are intentionally 12 digits so that

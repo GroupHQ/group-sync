@@ -36,10 +36,7 @@ import reactor.test.StepVerifier;
 
 import java.net.URI;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,6 +48,7 @@ import static org.awaitility.Awaitility.await;
 @Tag("AcceptanceTest")
 public class MemberPolicy {
 
+    public static final String GROUP_MEMBERS_ENDPOINT = "/groups/{groupId}/members";
     private static List<Group> groups = new ArrayList<>();
 
     private static RSocketRequester requester;
@@ -61,7 +59,7 @@ public class MemberPolicy {
     private static Group group;
     private static RequestEvent requestEvent;
 
-    private static final LinkedList<OutboxEvent> outboxEvents = new LinkedList<>();
+    private static final Deque<OutboxEvent> OUTBOX_EVENTS = new ArrayDeque<>();
 
     private static OutboxEvent event;
 
@@ -84,10 +82,10 @@ public class MemberPolicy {
         final URI url = URI.create("ws://localhost:" + port + "/rsocket");
 
         userId = UUID.randomUUID().toString();
-        UsernamePasswordMetadata credentials =
+        final UsernamePasswordMetadata credentials =
             new UsernamePasswordMetadata(userId, "password");
 
-        MimeType authenticationMimeType =
+        final MimeType authenticationMimeType =
             MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString());
 
         requester = builder
@@ -97,7 +95,7 @@ public class MemberPolicy {
         requester
             .route("groups.updates.user")
             .retrieveFlux(OutboxEvent.class)
-            .doOnNext(outboxEvents::add)
+            .doOnNext(OUTBOX_EVENTS::add)
             .subscribe();
 
         webTestClient
@@ -128,7 +126,7 @@ public class MemberPolicy {
     public void iTryToJoinTheGroup() {
         requestEvent = GroupTestUtility.generateGroupJoinRequestEvent(userId, group.id(), username);
 
-        outboxEvents.clear();
+        OUTBOX_EVENTS.clear();
 
         final Mono<Void> groupJoinRequest = requester
             .route("groups.join")
@@ -140,12 +138,12 @@ public class MemberPolicy {
             .log()
             .verify(Duration.ofSeconds(1));
 
-        await().atMost(5, TimeUnit.SECONDS).until(() -> outboxEvents.size() > 0);
+        await().atMost(5, TimeUnit.SECONDS).until(() -> !OUTBOX_EVENTS.isEmpty());
     }
 
     @Then("I should be a member of the group")
     public void iShouldBeAMemberOfTheGroup() {
-        event = outboxEvents.getLast();
+        event = OUTBOX_EVENTS.getLast();
 
         assertThat(event).isNotNull();
 
@@ -162,7 +160,7 @@ public class MemberPolicy {
     public void theGroupSCurrentMemberSizeShouldIncreaseByOne() {
         webTestClient
             .get()
-            .uri("/groups/{groupId}/members", group.id())
+            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)
@@ -173,7 +171,7 @@ public class MemberPolicy {
     public void iTryToLeaveTheGroup() {
         requestEvent = GroupTestUtility.generateGroupLeaveRequestEvent(userId, group.id(), member.id());
 
-        outboxEvents.clear();
+        OUTBOX_EVENTS.clear();
 
         final Mono<Void> groupLeaveRequest = requester
             .route("groups.leave")
@@ -185,14 +183,14 @@ public class MemberPolicy {
             .log()
             .verify(Duration.ofSeconds(1));
 
-        await().atMost(5, TimeUnit.SECONDS).until(() -> outboxEvents.size() > 0);
+        await().atMost(5, TimeUnit.SECONDS).until(() -> !OUTBOX_EVENTS.isEmpty());
     }
 
     @Then("I should no longer be an active member of that group")
     public void iShouldNoLongerBeAnActiveMemberOfThatGroup() {
         webTestClient
             .get()
-            .uri("/groups/{groupId}/members", group.id())
+            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)
@@ -204,7 +202,7 @@ public class MemberPolicy {
     public void iAmAMemberOfTheGroup() throws JsonProcessingException {
         requestEvent = GroupTestUtility.generateGroupJoinRequestEvent(userId, group.id(), username);
 
-        outboxEvents.clear();
+        OUTBOX_EVENTS.clear();
 
         final Mono<Void> groupJoinRequest = requester
             .route("groups.join")
@@ -216,14 +214,14 @@ public class MemberPolicy {
             .log()
             .verify(Duration.ofSeconds(1));
 
-        await().atMost(5, TimeUnit.SECONDS).until(() -> outboxEvents.size() > 0);
+        await().atMost(5, TimeUnit.SECONDS).until(() -> !OUTBOX_EVENTS.isEmpty());
 
-        event = outboxEvents.getLast();
+        event = OUTBOX_EVENTS.getLast();
         member = objectMapper.readValue(event.getEventData(), Member.class);
 
         webTestClient
             .get()
-            .uri("/groups/{groupId}/members", group.id())
+            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
             .exchange()
             .expectStatus()
             .is2xxSuccessful()
@@ -236,7 +234,7 @@ public class MemberPolicy {
     public void iShouldNotBeAddedToTheGroupAgain() {
         webTestClient
             .get()
-            .uri("/groups/{groupId}/members", group.id())
+            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)
@@ -259,7 +257,7 @@ public class MemberPolicy {
     public void iShouldNotBeAddedToTheSecondGroup() {
         webTestClient
             .get()
-            .uri("/groups/{groupId}/members", group.id())
+            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)
@@ -268,7 +266,7 @@ public class MemberPolicy {
 
     @When("another user tries to remove me from the group")
     public void anotherUserTriesToRemoveMeFromTheGroup() {
-        String otherUsersId = UUID.randomUUID().toString();
+        final String otherUsersId = UUID.randomUUID().toString();
         requestEvent = GroupTestUtility.generateGroupLeaveRequestEvent(
                 otherUsersId, group.id(), member.id());
 
@@ -284,10 +282,10 @@ public class MemberPolicy {
     }
 
     @Then("I should still be in the group")
-    public void IShouldStillBeInTheGroup() {
+    public void iShouldStillBeInTheGroup() {
         webTestClient
             .get()
-            .uri("/groups/{groupId}/members", group.id())
+            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)

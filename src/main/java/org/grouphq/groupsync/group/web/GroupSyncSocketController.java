@@ -39,7 +39,7 @@ public class GroupSyncSocketController {
         return ReactiveSecurityContextHolder.getContext()
             .map(SecurityContext::getAuthentication)
             .map(authentication -> {
-                String username = authentication.getName();
+                final String username = authentication.getName();
                 log.info("User {} connected.", username);
                 log.info("Authentication is {}.", authentication);
                 return username;
@@ -59,7 +59,7 @@ public class GroupSyncSocketController {
     @MessageMapping("groups.updates.user")
     public Flux<OutboxEvent> getEventOwnerUpdates() {
         return groupUpdateService.eventOwnerUpdateStream()
-            .flatMap(outboxEvent -> isUserEventOwner(outboxEvent)
+            .flatMap(outboxEvent -> monoIsUserEventOwner(outboxEvent)
                 .flatMap(isOwner -> isOwner ? Mono.just(outboxEvent) : Mono.empty())
                 .doOnError(throwable -> log.error(
                     "Error while verifying user ownership on event: {}", outboxEvent, throwable))
@@ -71,12 +71,12 @@ public class GroupSyncSocketController {
             .onErrorMap(unusedThrowable -> new InternalServerError("User update stream closed"));
     }
 
-    private Mono<Boolean> isUserEventOwner(OutboxEvent outboxEvent) {
+    private Mono<Boolean> monoIsUserEventOwner(OutboxEvent outboxEvent) {
         return ReactiveSecurityContextHolder.getContext()
             .map(SecurityContext::getAuthentication)
             .flatMap(authentication -> {
-                String username = authentication.getName();
-                String eventOwner = outboxEvent.getWebsocketId();
+                final String username = authentication.getName();
+                final String eventOwner = outboxEvent.getWebsocketId();
                 log.info("User ID is {}. Event Owner is {}", username, eventOwner);
                 if (username.equals(eventOwner)) {
                     log.info("User matches failed event, sending event...");

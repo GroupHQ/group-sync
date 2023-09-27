@@ -3,12 +3,12 @@ package org.grouphq.groupsync.group.event;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.event.daos.GroupCreateRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupLeaveRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
-import org.grouphq.groupsync.GroupTestUtility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

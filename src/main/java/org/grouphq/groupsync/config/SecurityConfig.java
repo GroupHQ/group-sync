@@ -17,6 +17,7 @@ import org.springframework.security.rsocket.core.PayloadSocketAcceptorIntercepto
 import org.springframework.security.rsocket.metadata.SimpleAuthenticationEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import reactor.core.publisher.Mono;
+
 /**
  * Configuration for Spring Security.
  */
@@ -39,14 +40,16 @@ public class SecurityConfig {
     @Bean
     public ReactiveAuthenticationManager reactiveAuthenticationManager() {
         return authentication -> {
-            String username = authentication.getName();
-            // after testing, check that all usernames are UUIDs
-//            try {
-//                UUID tryConversion = UUID.fromString(username);
-//            } catch (IllegalArgumentException e) {
-//                return Mono.error(new IllegalArgumentException("Invalid username: " + username));
-//            }
-//            String uuid = UUID.randomUUID().toString();
+            final String username = authentication.getName();
+            /* after testing, check that all usernames are UUIDs
+            try {
+                UUID tryConversion = UUID.fromString(username);
+            } catch (IllegalArgumentException e) {
+                return Mono.error(new IllegalArgumentException("Invalid username: " + username));
+            }
+
+            String uuid = UUID.randomUUID().toString();
+            */
             log.info("Creating Authentication Token with Username: {}", username);
 
             return Mono.just(new UsernamePasswordAuthenticationToken(
@@ -66,7 +69,7 @@ public class SecurityConfig {
     PayloadSocketAcceptorInterceptor rsocketInterceptor(RSocketSecurity socketSecurity) {
         socketSecurity.authorizePayload(authorize -> authorize
             .anyExchange().authenticated())
-        .simpleAuthentication(Customizer.withDefaults());
+            .simpleAuthentication(Customizer.withDefaults());
 
         return socketSecurity.build();
     }

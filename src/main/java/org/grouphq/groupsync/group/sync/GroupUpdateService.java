@@ -3,7 +3,6 @@ package org.grouphq.groupsync.group.sync;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
-import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -38,29 +37,19 @@ public class GroupUpdateService {
     }
 
     public void sendPublicOutboxEventToAll(PublicOutboxEvent outboxEvent) {
-        try {
-            Sinks.EmitResult result = publicUpdatesSink.tryEmitNext(outboxEvent);
-            emitResultLogger("PUBLIC", outboxEvent, result);
-        } catch (Exception e) {
-            log.error("Error while trying to emit outbox event to updates sink. Event: {}",
-                outboxEvent, e);
-        }
+        final Sinks.EmitResult result = publicUpdatesSink.tryEmitNext(outboxEvent);
+        emitResultLogger("PUBLIC", outboxEvent, result);
     }
 
     public void sendOutboxEventToEventOwner(OutboxEvent outboxEvent) {
-        try {
-            Sinks.EmitResult result = userUpdatesSink.tryEmitNext(outboxEvent);
-            emitResultLogger(outboxEvent.getEventStatus().toString(), outboxEvent, result);
-        } catch (Exception e) {
-            log.error("Error while trying to emit outbox event to failed updates sink. Event: {}",
-                outboxEvent, e);
-        }
+        final Sinks.EmitResult result = userUpdatesSink.tryEmitNext(outboxEvent);
+        emitResultLogger(outboxEvent.getEventStatus().toString(), outboxEvent, result);
     }
 
     private void emitResultLogger(String eventName,
                                   Object outboxEvent,
                                   Sinks.EmitResult result) {
-        String resultString = switch (result) {
+        final String resultString = switch (result) {
             case OK -> "OK";
             case FAIL_OVERFLOW -> "FAIL_OVERFLOW";
             case FAIL_NON_SERIALIZED -> "FAIL_NON_SERIALIZED";

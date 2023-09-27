@@ -3,10 +3,10 @@ package org.grouphq.groupsync.group.sync;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
-import org.grouphq.groupsync.GroupTestUtility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

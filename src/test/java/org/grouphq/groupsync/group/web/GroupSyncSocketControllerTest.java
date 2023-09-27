@@ -3,6 +3,7 @@ package org.grouphq.groupsync.group.web;
 import static org.mockito.BDDMockito.given;
 
 import java.time.Duration;
+import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
@@ -14,7 +15,6 @@ import org.grouphq.groupsync.groupservice.event.daos.GroupCreateRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupLeaveRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
-import org.grouphq.groupsync.GroupTestUtility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -170,7 +170,8 @@ class GroupSyncSocketControllerTest {
         given(groupEventPublisher.publishGroupUpdateStatusRequest(event))
             .willReturn(Mono.error(new RuntimeException(DUMMY_MESSAGE)));
 
-        final String expectedErrorString = "Cannot update group status" + INTERNAL_SERVER_ERROR_SUFFIX;
+        final String expectedErrorString =
+                "Cannot update group status" + INTERNAL_SERVER_ERROR_SUFFIX;
 
         StepVerifier.create(groupSyncSocketController.updateGroupStatus(event))
             .expectErrorMatches(throwable -> throwable instanceof InternalServerError

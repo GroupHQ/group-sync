@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.domain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Instant;
@@ -26,11 +27,11 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
                                 EventType eventType, String eventData,
                                 EventStatus eventStatus, Instant createdDate) {
 
-    private static final ObjectMapper objectMapper;
+    private static final ObjectMapper OBJECT_MAPPER;
 
     static {
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+        OBJECT_MAPPER = new ObjectMapper();
+        OBJECT_MAPPER.registerModule(new JavaTimeModule());
     }
 
     public static PublicOutboxEvent convertOutboxEvent(OutboxEvent outboxEvent) {
@@ -52,22 +53,26 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
     }
 
     private static PublicOutboxEvent convertMemberJoined(OutboxEvent outboxEvent) {
+        PublicOutboxEvent publicOutboxEvent;
+
         try {
-            Member member = objectMapper.readValue(outboxEvent.getEventData(), Member.class);
-            return new PublicOutboxEvent(
+            final Member member = OBJECT_MAPPER.readValue(outboxEvent.getEventData(), Member.class);
+            publicOutboxEvent = new PublicOutboxEvent(
                 outboxEvent.getAggregateId(),
                 outboxEvent.getAggregateType(),
                 outboxEvent.getEventType(),
-                objectMapper.writeValueAsString(Member.toPublicMember(member)),
+                OBJECT_MAPPER.writeValueAsString(Member.toPublicMember(member)),
                 outboxEvent.getEventStatus(),
                 outboxEvent.getCreatedDate()
             );
-        } catch (Exception e) {
+        } catch (JsonProcessingException exception) {
             log.error("Error while trying to convert member joined outbox event to "
                       + "public outbox event. Converting to default event. Event: {}",
-                outboxEvent, e);
-            return convertDefault(outboxEvent);
+                outboxEvent, exception);
+            publicOutboxEvent = convertDefault(outboxEvent);
         }
+
+        return publicOutboxEvent;
     }
 
     private static PublicOutboxEvent convertMemberLeft(OutboxEvent outboxEvent) {

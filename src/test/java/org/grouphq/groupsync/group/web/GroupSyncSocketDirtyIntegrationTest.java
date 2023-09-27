@@ -7,11 +7,15 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.UUID;
+import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
-import org.grouphq.groupsync.GroupTestUtility;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,28 +36,25 @@ import reactor.test.StepVerifier;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Import(TestChannelBinderConfiguration.class)
 @Tag("IntegrationTest")
-public class GroupSyncSocketDirtyIntegrationTest {
-
-    @Autowired
-    private InputDestination inputDestination;
+class GroupSyncSocketDirtyIntegrationTest {
 
     private static RSocketRequester requester;
 
     @Value("${spring.cloud.stream.bindings.processedEvents-in-0.destination}")
     private String eventDestination;
 
-    private static final String userId = UUID.randomUUID().toString();
+    private static final String USER_ID = UUID.randomUUID().toString();
 
     @BeforeEach
     public void setup(@Autowired RSocketRequester.Builder builder,
                       @LocalServerPort Integer port) {
         final URI url = URI.create("ws://localhost:" + port + "/rsocket");
 
-        UsernamePasswordMetadata credentials =
-            new UsernamePasswordMetadata(userId, "password");
+        final UsernamePasswordMetadata credentials =
+            new UsernamePasswordMetadata(USER_ID, "password");
 
-        MimeType authenticationMimeType =
-            MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString());
+        final MimeType authenticationMimeType = MimeTypeUtils.parseMimeType(
+                WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString());
 
         requester = builder
             .setupMetadata(credentials, authenticationMimeType)
@@ -77,25 +78,25 @@ public class GroupSyncSocketDirtyIntegrationTest {
     @DisplayName("Test RSocket integration for streaming successful outbox events to all users")
     void testGetPublicOutboxEventUpdates(@Autowired InputDestination inputDestination) {
         final OutboxEvent[] outboxEvents = {
-            GroupTestUtility.generateOutboxEvent(userId, EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent(userId, EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent("Some other user", EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent(userId, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent(userId, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent("Some other user", EventStatus.FAILED)
+            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEvent("Some other user 1", EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEvent("Some other user 2", EventStatus.FAILED)
         };
 
         final Flux<PublicOutboxEvent> groupUpdatesStream = requester
             .route("groups.updates.all")
             .retrieveFlux(PublicOutboxEvent.class)
             .doOnSubscribe(subscription -> {
-                for (OutboxEvent outboxEvent : outboxEvents) {
+                for (final OutboxEvent outboxEvent : outboxEvents) {
                     inputDestination.send(new GenericMessage<>(outboxEvent), eventDestination);
                 }
             });
 
         // Events we expect to receive back as public
-        PublicOutboxEvent[] publicEvents = {
+        final PublicOutboxEvent[] publicEvents = {
             PublicOutboxEvent.convertOutboxEvent(outboxEvents[0]),
             PublicOutboxEvent.convertOutboxEvent(outboxEvents[1]),
             PublicOutboxEvent.convertOutboxEvent(outboxEvents[2])
@@ -117,11 +118,11 @@ public class GroupSyncSocketDirtyIntegrationTest {
     @DisplayName("Test RSocket integration for streaming outbox events belonging to a user")
     void testGetEventOwnerOutboxEventUpdates(@Autowired InputDestination inputDestination) {
         final OutboxEvent[] outboxEvents = {
-            GroupTestUtility.generateOutboxEvent(userId, EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent(userId, EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
             GroupTestUtility.generateOutboxEvent("Some other user", EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent(userId, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent(userId, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.FAILED),
             GroupTestUtility.generateOutboxEvent("Some other user", EventStatus.FAILED)
         };
 
@@ -129,7 +130,7 @@ public class GroupSyncSocketDirtyIntegrationTest {
             .route("groups.updates.user")
             .retrieveFlux(OutboxEvent.class)
             .doOnSubscribe(subscription -> {
-                for (OutboxEvent outboxEvent : outboxEvents) {
+                for (final OutboxEvent outboxEvent : outboxEvents) {
                     inputDestination.send(new GenericMessage<>(outboxEvent), eventDestination);
                 }
             });
