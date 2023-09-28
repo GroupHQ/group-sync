@@ -17,10 +17,10 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @RestController
-public class GroupSocketController {
+public class GroupSyncController {
     private final GroupUpdateService groupUpdateService;
 
-    public GroupSocketController(GroupUpdateService groupUpdateService) {
+    public GroupSyncController(GroupUpdateService groupUpdateService) {
         this.groupUpdateService = groupUpdateService;
     }
 

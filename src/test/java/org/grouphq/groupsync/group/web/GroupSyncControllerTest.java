@@ -24,13 +24,13 @@ import reactor.test.StepVerifier;
 @ExtendWith({MockitoExtension.class, SpringExtension.class})
 @SecurityTestExecutionListeners
 @Tag("UnitTest")
-class GroupSocketControllerTest {
+class GroupSyncControllerTest {
 
     @Mock
     private GroupUpdateService groupUpdateService;
 
     @InjectMocks
-    private GroupSocketController groupSocketController;
+    private GroupSyncController groupSyncController;
 
     @Test
     @DisplayName("Test streaming outbox events to all clients")
@@ -47,7 +47,7 @@ class GroupSocketControllerTest {
 
         given(groupUpdateService.publicUpdatesStream()).willReturn(sink.asFlux());
 
-        StepVerifier.create(groupSocketController.getPublicUpdates())
+        StepVerifier.create(groupSyncController.getPublicUpdates())
             .expectNext(publicOutboxEvent)
             .expectNext(publicOutboxEvent)
             .expectNext(publicOutboxEvent)
@@ -73,7 +73,7 @@ class GroupSocketControllerTest {
 
         given(groupUpdateService.eventOwnerUpdateStream()).willReturn(sink.asFlux());
 
-        StepVerifier.create(groupSocketController.getEventOwnerUpdates())
+        StepVerifier.create(groupSyncController.getEventOwnerUpdates())
             .expectNext(events[1])
             .thenCancel()
             .verify(Duration.ofSeconds(1));

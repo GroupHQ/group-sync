@@ -2,14 +2,14 @@ package org.grouphq.groupsync.group.sync;
 
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 /**
  * Service class for interacting with group service.
  */
-@Component
+@Service
 public class GroupServiceClient {
     private final WebClient webClient;
 
