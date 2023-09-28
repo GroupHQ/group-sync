@@ -103,7 +103,7 @@ while being called by an upstream service (Edge Service, i.e. an API Gateway).
 #### 1. Group Sync Publishes a Group Join Request to the Event Broker
 ![structurizr-1-GroupHQ_GroupSyncJoinGroupPart1_Dynamic](https://github.com/GroupHQ/group-sync/assets/88041024/53e8a8e5-f913-41b7-a056-1c57ea6cc85a)
 #### 2. Group Service Consumes this Request From the Broker And Publishes an OutboxEvent to the Broker
-![structurizr-1-GroupHQ_GroupSyncJoinGroupPart2_Dynamic](https://github.com/GroupHQ/group-sync/assets/88041024/a190b95f-4751-4c09-a9a6-ba2ddd80b5c1)
+![structurizr-1-GroupHQ_GroupSyncJoinGroupPart2_Dynamic](https://github.com/GroupHQ/group-sync/assets/88041024/be44b8f5-6946-441d-b749-c6f1aa70aeed)
 #### 3. Group Sync Consumes this OutboxEvent and Forwards the Event Info to all Connected Users
 ![structurizr-1-GroupHQ_GroupSyncJoinGroupPart3_Dynamic](https://github.com/GroupHQ/group-sync/assets/88041024/3e86c40c-4d4b-4909-9aae-9b0450e1c152)
 
