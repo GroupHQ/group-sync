@@ -7,9 +7,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Properties for the group service client.
  */
-@ConfigurationProperties(prefix = "grouphq")
+@ConfigurationProperties(prefix = "grouphq.group-service")
 public record ClientProperties(
     @NotNull
-    URI groupServiceUri
+    URI url,
+
+    @NotNull
+    Long getGroupsTimeout,
+
+    @NotNull
+    Long getGroupMembersTimeout
 ) {
 }
