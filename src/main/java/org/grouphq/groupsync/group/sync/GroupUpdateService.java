@@ -29,11 +29,11 @@ public class GroupUpdateService {
     }
 
     public Flux<PublicOutboxEvent> publicUpdatesStream() {
-        return publicUpdatesFlux.cache();
+        return publicUpdatesFlux.cache(10);
     }
 
     public Flux<OutboxEvent> eventOwnerUpdateStream() {
-        return userUpdatesFlux.cache();
+        return userUpdatesFlux.cache(10);
     }
 
     public void sendPublicOutboxEventToAll(PublicOutboxEvent outboxEvent) {
@@ -58,10 +58,7 @@ public class GroupUpdateService {
             case FAIL_ZERO_SUBSCRIBER -> "FAIL_ZERO_SUBSCRIBER";
         };
 
-        if (result.isSuccess()) {
-            log.info("Successfully emitted {} event. Event: {}. EmitResult: {}",
-                eventName, outboxEvent, resultString);
-        } else {
+        if (result.isFailure()) {
             log.error("Failed to emit {} event. Event: {}. EmitResult: {}",
                 eventName, outboxEvent, resultString);
         }

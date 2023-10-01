@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.web.features;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
@@ -13,14 +14,12 @@ import reactor.core.publisher.Mono;
  * RSocket handler for sending group leave requests.
  */
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 @ConditionalOnProperty(name = "grouphq.features.groups.leave", havingValue = "true")
 public class GroupLeaveController {
-    private final GroupEventPublisher groupEventPublisher;
 
-    public GroupLeaveController(GroupEventPublisher groupEventPublisher) {
-        this.groupEventPublisher = groupEventPublisher;
-    }
+    private final GroupEventPublisher groupEventPublisher;
 
     @MessageMapping("groups.leave")
     public Mono<Void> leaveGroup(GroupLeaveRequestEvent groupLeaveRequestEvent) {

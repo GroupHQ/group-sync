@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.web;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
@@ -16,18 +17,17 @@ import reactor.core.publisher.Mono;
  * Provides RSocket endpoints for streaming outbox events and handling request events.
  */
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 public class GroupSyncController {
-    private final GroupUpdateService groupUpdateService;
 
-    public GroupSyncController(GroupUpdateService groupUpdateService) {
-        this.groupUpdateService = groupUpdateService;
-    }
+    private final GroupUpdateService groupUpdateService;
 
     @MessageMapping("groups.updates.all")
     public Flux<PublicOutboxEvent> getPublicUpdates() {
+        log.info("Subscribing connection to public updates stream.");
         return groupUpdateService.publicUpdatesStream()
-            .doOnCancel(() -> log.info("Cancelled streaming outbox events."))
+            .doOnCancel(() -> log.info("User cancelled streaming outbox events."))
             .doOnComplete(() -> log.info("Stopped streaming outbox events."))
             .doOnError(throwable -> log.error("Error while streaming outbox events. "
                                               + "Stream will be terminated.", throwable))
@@ -43,6 +43,7 @@ public class GroupSyncController {
                     "Error while verifying user ownership on event: {}", outboxEvent, throwable))
                 .onErrorResume(throwable -> Mono.empty())
             )
+            .doOnCancel(() -> log.info("User cancelled streaming user outbox events."))
             .doOnComplete(() -> log.info("Stopped streaming outbox events to users."))
             .doOnError(throwable -> log.error("Error while streaming user outbox events. "
                                               + "Stream will be terminated.", throwable))
@@ -55,13 +56,7 @@ public class GroupSyncController {
             .flatMap(authentication -> {
                 final String username = authentication.getName();
                 final String eventOwner = outboxEvent.getWebsocketId();
-                log.info("User ID is {}. Event Owner is {}", username, eventOwner);
-                if (username.equals(eventOwner)) {
-                    log.info("User matches failed event, sending event...");
-                    return Mono.just(true);
-                }
-                log.info("User does not match failed event, not sending event...");
-                return Mono.just(false);
+                return username.equals(eventOwner) ? Mono.just(true) : Mono.just(false);
             });
     }
 }

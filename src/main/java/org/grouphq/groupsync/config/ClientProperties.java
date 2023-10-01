@@ -13,9 +13,21 @@ public record ClientProperties(
     URI url,
 
     @NotNull
-    Long getGroupsTimeout,
+    Long getGroupsTimeoutMilliseconds,
 
     @NotNull
-    Long getGroupMembersTimeout
+    Long getGroupsRetryAttempts,
+
+    @NotNull
+    Long getGroupsRetryBackoffMilliseconds,
+
+    @NotNull
+    Long getGroupMembersTimeoutMilliseconds,
+
+    @NotNull
+    Long getGroupMembersRetryAttempts,
+
+    @NotNull
+    Long getGroupMembersRetryBackoffMilliseconds
 ) {
 }

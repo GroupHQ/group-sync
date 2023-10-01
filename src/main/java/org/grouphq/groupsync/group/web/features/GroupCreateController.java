@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.web.features;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
@@ -13,14 +14,12 @@ import reactor.core.publisher.Mono;
  * RSocket handler for sending group create requests.
  */
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 @ConditionalOnProperty(name = "grouphq.features.groups.create", havingValue = "true")
 public class GroupCreateController {
-    private final GroupEventPublisher groupEventPublisher;
 
-    public GroupCreateController(GroupEventPublisher groupEventPublisher) {
-        this.groupEventPublisher = groupEventPublisher;
-    }
+    private final GroupEventPublisher groupEventPublisher;
 
     @MessageMapping("groups.create")
     public Mono<Void> createGroup(GroupCreateRequestEvent groupCreateRequestEvent) {
