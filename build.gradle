@@ -85,7 +85,6 @@ idea {
 
 ext {
     set('springCloudVersion', "2022.0.4")
-    set('otelVersion', "1.17.0")
 }
 
 dependencies {
@@ -102,7 +101,7 @@ dependencies {
 
     implementation 'io.projectreactor:reactor-tools'
     implementation 'com.github.javafaker:javafaker:1.0.2'
-    implementation "io.sentry:sentry-spring-boot-starter-jakarta:6.28.0"
+//    implementation "io.sentry:sentry-spring-boot-starter-jakarta:6.28.0"
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
