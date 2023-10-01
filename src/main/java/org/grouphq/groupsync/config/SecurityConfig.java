@@ -33,7 +33,8 @@ public class SecurityConfig {
     SecurityWebFilterChain filterChain(ServerHttpSecurity httpSecurity) {
         return httpSecurity
             .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
-                .anyExchange().permitAll())
+                .pathMatchers("/actuator/**").permitAll()
+                .anyExchange().authenticated())
             .httpBasic(Customizer.withDefaults())
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .build();
