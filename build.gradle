@@ -92,12 +92,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
-//    implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-stream'
     implementation 'org.springframework.cloud:spring-cloud-stream-binder-rabbit'
     implementation 'org.springframework.boot:spring-boot-starter-rsocket'
     implementation 'org.springframework.security:spring-security-rsocket'
     implementation 'net.java.dev.jna:jna:5.13.0'
+
+    implementation "org.springframework.cloud:spring-cloud-starter-config"
+    implementation "org.springframework.retry:spring-retry"
+    implementation "org.springframework.boot:spring-boot-starter-aop"
 
     implementation 'io.projectreactor:reactor-tools'
     implementation 'com.github.javafaker:javafaker:1.0.2'
