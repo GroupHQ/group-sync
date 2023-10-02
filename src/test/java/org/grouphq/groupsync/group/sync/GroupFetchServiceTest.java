@@ -7,6 +7,7 @@ import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
+import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -48,9 +49,9 @@ class GroupFetchServiceTest {
     @Test
     @DisplayName("When there are group members, then return a list of group members")
     void whenGroupMembersExistThenReturnGroupMembers() {
-        final Member[] testMembers = {
-            GroupTestUtility.generateFullMemberDetails(),
-            GroupTestUtility.generateFullMemberDetails()
+        final PublicMember[] testMembers = {
+            Member.toPublicMember(GroupTestUtility.generateFullMemberDetails()),
+            Member.toPublicMember(GroupTestUtility.generateFullMemberDetails())
         };
 
         given(groupServiceClient.getGroupMembers(1L)).willReturn(Flux.just(testMembers));

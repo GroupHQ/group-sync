@@ -37,10 +37,14 @@ jobs:
         run: |
           ./gradlew checkstyleMain
           ./gradlew checkstyleTest
+          ./gradlew checkstyleTestAcceptance
+          ./gradlew checkstyleTestFixtures
       - name: Checking code quality
         run: |
           ./gradlew pmdMain
           ./gradlew pmdTest
+          ./gradlew pmdTestAcceptance
+          ./gradlew pmdTestFixtures
       - name: Running Unit Tests
         run: ./gradlew testUnit
       - name: Running Integration Tests

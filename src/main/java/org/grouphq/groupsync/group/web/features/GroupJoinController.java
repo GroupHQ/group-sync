@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.web.features;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
@@ -13,14 +14,12 @@ import reactor.core.publisher.Mono;
  * RSocket handler for sending group join requests.
  */
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 @ConditionalOnProperty(name = "grouphq.features.groups.join", havingValue = "true")
 public class GroupJoinController {
-    private final GroupEventPublisher groupEventPublisher;
 
-    public GroupJoinController(GroupEventPublisher groupEventPublisher) {
-        this.groupEventPublisher = groupEventPublisher;
-    }
+    private final GroupEventPublisher groupEventPublisher;
 
     @MessageMapping("groups.join")
     public Mono<Void> joinGroup(GroupJoinRequestEvent groupJoinRequestEvent) {

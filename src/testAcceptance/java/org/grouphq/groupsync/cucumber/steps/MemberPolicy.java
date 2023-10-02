@@ -49,6 +49,8 @@ import static org.awaitility.Awaitility.await;
 public class MemberPolicy {
 
     public static final String GROUP_MEMBERS_ENDPOINT = "/groups/{groupId}/members";
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String HTTP_BASIC_PREFIX = "Basic ";
     private static List<Group> groups = new ArrayList<>();
 
     private static RSocketRequester requester;
@@ -64,6 +66,8 @@ public class MemberPolicy {
     private static OutboxEvent event;
 
     private String userId;
+
+    private String httpBasicCredentialsEncoded;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -82,6 +86,11 @@ public class MemberPolicy {
         final URI url = URI.create("ws://localhost:" + port + "/rsocket");
 
         userId = UUID.randomUUID().toString();
+
+        final String httpBasicCredentialsRaw = userId + ":password";
+        httpBasicCredentialsEncoded =
+            Base64.getEncoder().encodeToString(httpBasicCredentialsRaw.getBytes());
+
         final UsernamePasswordMetadata credentials =
             new UsernamePasswordMetadata(userId, "password");
 
@@ -101,6 +110,7 @@ public class MemberPolicy {
         webTestClient
             .get()
             .uri( "/groups")
+            .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(Group.class)
@@ -161,6 +171,7 @@ public class MemberPolicy {
         webTestClient
             .get()
             .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)
@@ -191,6 +202,7 @@ public class MemberPolicy {
         webTestClient
             .get()
             .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)
@@ -222,6 +234,7 @@ public class MemberPolicy {
         webTestClient
             .get()
             .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus()
             .is2xxSuccessful()
@@ -235,6 +248,7 @@ public class MemberPolicy {
         webTestClient
             .get()
             .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)
@@ -258,6 +272,7 @@ public class MemberPolicy {
         webTestClient
             .get()
             .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)
@@ -286,6 +301,7 @@ public class MemberPolicy {
         webTestClient
             .get()
             .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
             .expectBodyList(PublicMember.class)

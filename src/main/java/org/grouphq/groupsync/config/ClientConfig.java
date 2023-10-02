@@ -16,7 +16,7 @@ public class ClientConfig {
         WebClient.Builder webClientBuilder
     ) {
         return webClientBuilder
-            .baseUrl(clientProperties.groupServiceUri().toString())
+            .baseUrl(clientProperties.url().toString())
             .build();
     }
 }

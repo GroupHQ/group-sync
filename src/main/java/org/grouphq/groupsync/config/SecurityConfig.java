@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.rsocket.messaging.RSocketStrategiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.Customizer;
@@ -32,7 +33,8 @@ public class SecurityConfig {
     SecurityWebFilterChain filterChain(ServerHttpSecurity httpSecurity) {
         return httpSecurity
             .authorizeExchange(authorizeExchangeSpec -> authorizeExchangeSpec
-                .anyExchange().permitAll())
+                .pathMatchers("/actuator/**").permitAll()
+                .anyExchange().authenticated())
             .httpBasic(Customizer.withDefaults())
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .build();
@@ -46,7 +48,7 @@ public class SecurityConfig {
             try {
                 UUID.fromString(username);
             } catch (IllegalArgumentException e) {
-                return Mono.error(new IllegalArgumentException("Invalid username: " + username));
+                return Mono.error(new BadCredentialsException("Invalid username provided."));
             }
 
             return Mono.just(new UsernamePasswordAuthenticationToken(
