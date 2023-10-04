@@ -58,7 +58,11 @@ spec:
             periodSeconds: 5
             terminationGracePeriodSeconds: 150
           volumeMounts:
-            - name: group-service-config-volume
+            - name: group-sync-config-volume
               mountPath: /workspace/config
       imagePullSecrets:
         - name: ghcr-secret
+      volumes:
+        - name: group-sync-config-volume
+          configMap:
+            name: group-sync-config
