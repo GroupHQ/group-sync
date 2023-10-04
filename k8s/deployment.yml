@@ -57,3 +57,8 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 5
             terminationGracePeriodSeconds: 150
+          volumeMounts:
+            - name: group-service-config-volume
+              mountPath: /workspace/config
+      imagePullSecrets:
+        - name: ghcr-secret
