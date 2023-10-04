@@ -1,0 +1,25 @@
+server:
+  error:
+    include-stacktrace: never
+spring:
+  cloud:
+    config:
+      uri: http://config-service
+      fail-fast: false
+  rabbitmq:
+    host: grouphq-rabbitmq
+grouphq:
+  features:
+    groups:
+      create: false
+      status: false
+      join: true
+      leave: true
+  group-service:
+    url: http://group-service:9001
+    get-groups-timeout-milliseconds: 3000
+    get-groups-retry-attempts: 3
+    get-groups-retry-backoff-milliseconds: 100
+    get-group-members-timeout-milliseconds: 3000
+    get-group-members-retry-attempts: 3
+    get-group-members-retry-backoff-milliseconds: 100
