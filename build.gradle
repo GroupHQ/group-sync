@@ -85,6 +85,7 @@ idea {
 
 ext {
     set('springCloudVersion', "2022.0.4")
+    set('otelVersion', "1.26.0")
 }
 
 dependencies {
@@ -109,16 +110,13 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-    // Micrometer tracing integration with OpenTelemetry and Zipkin
+    // Micrometer tracing integration with OpenTelemetry
     implementation platform("io.micrometer:micrometer-tracing-bom:latest.release")
     implementation "io.micrometer:micrometer-tracing-bridge-otel"
-    implementation "io.opentelemetry:opentelemetry-exporter-zipkin"
+    runtimeOnly "io.opentelemetry.javaagent:opentelemetry-javaagent:${otelVersion}"
 
     // Prometheus integration with Micrometer metrics
     implementation "io.micrometer:micrometer-registry-prometheus"
-
-    // Ships logs to Loki
-    implementation "com.github.loki4j:loki-logback-appender:1.4.2"
 
     // Reactor integration with Micrometer (also pulls in the context-propagation dependency)
     implementation "io.projectreactor:reactor-core-micrometer:1.0.10"
