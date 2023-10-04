@@ -45,16 +45,14 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 9002
-            initialDelaySeconds: 10
+            initialDelaySeconds: 60
             periodSeconds: 5
-            terminationGracePeriodSeconds: 150
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 9002
-            initialDelaySeconds: 10
+            initialDelaySeconds: 60
             periodSeconds: 5
-            terminationGracePeriodSeconds: 150
           volumeMounts:
             - name: group-sync-config-volume
               mountPath: /workspace/config
