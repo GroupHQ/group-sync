@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: group-sync
+  labels:
+    app: group-sync
+spec:
+  type: ClusterIP
+  selector:
+    app: group-sync
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9002
