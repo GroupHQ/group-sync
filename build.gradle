@@ -27,7 +27,7 @@ dependencyCheck {
 
 // Java Code Style Checker Following (mostly) Google Style Guidelines
 checkstyle {
-    toolVersion = "10.12.2"
+    toolVersion = "10.12.4"
     configFile = file("${project.rootDir}/config/checkstyle/google_checks.xml")
     configProperties = [ "suppressionFile" : project(':').file('config/checkstyle/suppressions.xml')]
 }
