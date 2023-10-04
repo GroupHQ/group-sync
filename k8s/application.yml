@@ -2,10 +2,6 @@ server:
   error:
     include-stacktrace: never
 spring:
-  cloud:
-    config:
-      uri: http://config-service
-      fail-fast: false
   rabbitmq:
     host: grouphq-rabbitmq
 grouphq:
