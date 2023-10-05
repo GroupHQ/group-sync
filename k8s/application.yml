@@ -12,7 +12,7 @@ grouphq:
       join: true
       leave: true
   group-service:
-    url: http://group-service:9001
+    url: http://group-service
     get-groups-timeout-milliseconds: 3000
     get-groups-retry-attempts: 3
     get-groups-retry-backoff-milliseconds: 100
