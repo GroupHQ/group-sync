@@ -32,7 +32,7 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: -javaagent:/workspace/BOOT-INF/lib/opentelemetry-javaagent-1.26.0.jar
             - name: OTEL_SERVICE_NAME
-              value: group-service
+              value: group-sync
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://tempo
             - name: OTEL_METRICS_EXPORTER
