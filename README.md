@@ -91,7 +91,9 @@ provide the fastest response times to users with low-operating costs and mainten
 ## Group Sync Architecture
 The following container diagram shows Group Sync's place in the GroupHQ Software System. Shown in the diagram, Group Sync communicates with three downstream services (Group Service, an Event Broker, and Config Service),
 while being called by an upstream service (Edge Service, i.e. an API Gateway).
-![structurizr-1-GroupHQ_Demo_Containers Alpha 0 1 1 0](https://github.com/GroupHQ/group-sync/assets/88041024/73be58bd-05c3-4c29-9668-3dec841f5086)
+
+![structurizr-1-GroupHQ_Demo_Containers Alpha 0 1 1 1](https://github.com/GroupHQ/group-sync/assets/88041024/487a4202-35a8-485c-9593-d3b0244c2ad3)
+
 
 <hr>
 
