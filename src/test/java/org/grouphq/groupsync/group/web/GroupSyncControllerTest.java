@@ -40,7 +40,7 @@ class GroupSyncControllerTest {
 
         // Mimic a stream of events, followed by an error that should be ignored
         // The stream should continue after the error
-        final Sinks.Many<PublicOutboxEvent> sink = Sinks.many().multicast().onBackpressureBuffer();
+        final Sinks.Many<PublicOutboxEvent> sink = Sinks.many().replay().limit(100);
         sink.tryEmitNext(publicOutboxEvent);
         sink.tryEmitNext(publicOutboxEvent);
         sink.tryEmitNext(publicOutboxEvent);
@@ -66,7 +66,7 @@ class GroupSyncControllerTest {
         };
 
         // Mimic a stream of events
-        final Sinks.Many<OutboxEvent> sink = Sinks.many().multicast().onBackpressureBuffer();
+        final Sinks.Many<OutboxEvent> sink = Sinks.many().replay().limit(100);
         sink.tryEmitNext(events[0]);
         sink.tryEmitNext(events[1]);
         sink.tryEmitNext(events[2]);

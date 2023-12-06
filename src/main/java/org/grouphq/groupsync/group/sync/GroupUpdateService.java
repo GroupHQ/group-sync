@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.BufferOverflowStrategy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
@@ -15,25 +16,23 @@ import reactor.core.publisher.Sinks;
 public class GroupUpdateService {
 
     private final Sinks.Many<PublicOutboxEvent> publicUpdatesSink;
-    private final Flux<PublicOutboxEvent> publicUpdatesFlux;
 
     private final Sinks.Many<OutboxEvent> userUpdatesSink;
-    private final Flux<OutboxEvent> userUpdatesFlux;
 
     public GroupUpdateService() {
-        publicUpdatesSink = Sinks.many().multicast().onBackpressureBuffer();
-        publicUpdatesFlux = publicUpdatesSink.asFlux();
+        publicUpdatesSink = Sinks.many().replay().limit(100);
 
-        userUpdatesSink = Sinks.many().multicast().onBackpressureBuffer();
-        userUpdatesFlux = userUpdatesSink.asFlux();
+        userUpdatesSink = Sinks.many().replay().limit(100);
     }
 
     public Flux<PublicOutboxEvent> publicUpdatesStream() {
-        return publicUpdatesFlux.cache(10);
+        return publicUpdatesSink.asFlux()
+            .onBackpressureBuffer(100, BufferOverflowStrategy.DROP_OLDEST);
     }
 
     public Flux<OutboxEvent> eventOwnerUpdateStream() {
-        return userUpdatesFlux.cache(10);
+        return userUpdatesSink.asFlux()
+            .onBackpressureBuffer(100, BufferOverflowStrategy.DROP_OLDEST);
     }
 
     public void sendPublicOutboxEventToAll(PublicOutboxEvent outboxEvent) {
@@ -49,15 +48,7 @@ public class GroupUpdateService {
     private void emitResultLogger(String eventName,
                                   Object outboxEvent,
                                   Sinks.EmitResult result) {
-        final String resultString = switch (result) {
-            case OK -> "OK";
-            case FAIL_OVERFLOW -> "FAIL_OVERFLOW";
-            case FAIL_NON_SERIALIZED -> "FAIL_NON_SERIALIZED";
-            case FAIL_CANCELLED -> "FAIL_CANCELLED";
-            case FAIL_TERMINATED -> "FAIL_TERMINATED";
-            case FAIL_ZERO_SUBSCRIBER -> "FAIL_ZERO_SUBSCRIBER";
-        };
-
+        final String resultString = result.name();
         if (result.isFailure()) {
             log.error("Failed to emit {} event. Event: {}. EmitResult: {}",
                 eventName, outboxEvent, resultString);
