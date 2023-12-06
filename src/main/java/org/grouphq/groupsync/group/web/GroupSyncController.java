@@ -27,6 +27,7 @@ public class GroupSyncController {
     public Flux<PublicOutboxEvent> getPublicUpdates() {
         log.info("Subscribing connection to public updates stream.");
         return groupUpdateService.publicUpdatesStream()
+            .doOnNext(outboxEvent -> log.info("Sending public outbox event: {}", outboxEvent))
             .doOnCancel(() -> log.info("User cancelled streaming outbox events."))
             .doOnComplete(() -> log.info("Stopped streaming outbox events."))
             .doOnError(throwable -> log.error("Error while streaming outbox events. "

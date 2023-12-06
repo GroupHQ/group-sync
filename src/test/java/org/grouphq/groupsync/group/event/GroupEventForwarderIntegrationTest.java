@@ -58,6 +58,12 @@ class GroupEventForwarderIntegrationTest {
             .expectNext(publicEvents[0], publicEvents[1], publicEvents[2])
             .thenCancel()
             .verify(Duration.ofSeconds(1));
+
+        // Subscribe again--should also receive a replay of events
+        StepVerifier.create(groupUpdatesStream)
+            .expectNext(publicEvents[0], publicEvents[1], publicEvents[2])
+            .thenCancel()
+            .verify(Duration.ofSeconds(1));
     }
 
     @Test
@@ -77,6 +83,12 @@ class GroupEventForwarderIntegrationTest {
                 inputDestination.send(new GenericMessage<>(outboxEvents[1]), eventDestination);
                 inputDestination.send(new GenericMessage<>(outboxEvents[2]), eventDestination);
             });
+
+        // Subscribe to updates sink
+        StepVerifier.create(groupUpdatesStream)
+            .expectNext(outboxEvents[0], outboxEvents[1], outboxEvents[2])
+            .thenCancel()
+            .verify(Duration.ofSeconds(1));
 
         // Subscribe to updates sink
         StepVerifier.create(groupUpdatesStream)
