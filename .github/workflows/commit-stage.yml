@@ -5,6 +5,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: grouphq/group-sync
   VERSION: ${{ github.sha }}
+  NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
 jobs:
   build:
