@@ -70,7 +70,7 @@ spring:
     connection-timeout: 5s
   rsocket:
     server:
-      mapping-path: /rsocket
+      mapping-path: /api/rsocket
       transport: websocket
 logging:
   level:

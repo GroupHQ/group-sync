@@ -25,7 +25,7 @@ public class GroupServiceClient {
     public Flux<Group> getGroups() {
         return webClient
             .get()
-            .uri("/groups")
+            .uri("/api/groups")
             .retrieve()
             .bodyToFlux(Group.class)
             .timeout(Duration.ofMillis(
@@ -42,7 +42,7 @@ public class GroupServiceClient {
     public Flux<PublicMember> getGroupMembers(Long groupId) {
         return webClient
             .get()
-            .uri("/groups/" + groupId + "/members")
+            .uri("/api/groups/" + groupId + "/members")
             .retrieve()
             .bodyToFlux(PublicMember.class)
             .timeout(Duration.ofMillis(
