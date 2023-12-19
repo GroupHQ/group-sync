@@ -50,7 +50,7 @@ class GroupCreateControllerIntegrationTest {
     @BeforeEach
     public void setup(@Autowired RSocketRequester.Builder builder,
                       @LocalServerPort Integer port) {
-        final URI url = URI.create("ws://localhost:" + port + "/rsocket");
+        final URI url = URI.create("ws://localhost:" + port + "/api/rsocket");
 
         final UsernamePasswordMetadata credentials =
             new UsernamePasswordMetadata(USER_ID, "password");

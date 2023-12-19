@@ -17,7 +17,7 @@ import reactor.core.publisher.Flux;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("groups")
+@RequestMapping("api/groups")
 public class GroupController {
 
     private final GroupFetchService groupFetchService;

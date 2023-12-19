@@ -50,7 +50,7 @@ class GroupControllerTest {
 
         webTestClient
             .get()
-            .uri("/groups")
+            .uri("/api/groups")
             .header("Authorization", "Basic " + authorization)
             .exchange()
             .expectStatus().is2xxSuccessful()
@@ -77,7 +77,7 @@ class GroupControllerTest {
 
         webTestClient
             .get()
-            .uri("/groups" + "/1" + "/members")
+            .uri("/api/groups" + "/1" + "/members")
             .header("Authorization", "Basic " + authorization)
             .exchange()
             .expectStatus().is2xxSuccessful()
