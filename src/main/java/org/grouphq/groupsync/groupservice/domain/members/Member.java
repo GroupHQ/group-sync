@@ -11,7 +11,6 @@ import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
  * @param websocketId The user's websocket ID for the request
  * @param username Member's username
  * @param groupId Group ID identifying the group the member belongs to
- * @param joinedDate Time user joined the group. Same time as createdDate
  * @param exitedDate Time user left the group. Initially null.
  * @param createdDate Time group was created
  * @param lastModifiedDate Time group was last modified / updated
@@ -28,8 +27,6 @@ public record Member(
     Long groupId,
     MemberStatus memberStatus,
 
-    Instant joinedDate,
-
     Instant exitedDate,
 
     Instant createdDate,
@@ -44,13 +41,14 @@ public record Member(
 ) {
     public static Member of(String username, Long groupId) {
         return new Member(null, UUID.randomUUID(), username, groupId, MemberStatus.ACTIVE, null,
-            null, null, null, null, null, 0);
+            null, null, null, null, 0);
     }
 
     public static PublicMember toPublicMember(Member member) {
         return new PublicMember(
             member.id(), member.username(), member.groupId(),
-            member.memberStatus(), member.joinedDate(), member.exitedDate()
+            member.memberStatus(), member.createdDate().toString(),
+            member.exitedDate() == null ? null : member.exitedDate().toString()
         );
     }
 }

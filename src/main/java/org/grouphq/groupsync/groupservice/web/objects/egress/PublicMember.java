@@ -1,6 +1,5 @@
 package org.grouphq.groupsync.groupservice.web.objects.egress;
 
-import java.time.Instant;
 import org.grouphq.groupsync.groupservice.domain.members.MemberStatus;
 
 /**
@@ -19,8 +18,8 @@ public record PublicMember(
     Long groupId,
     MemberStatus memberStatus,
 
-    Instant joinedDate,
+    String joinedDate,
 
-    Instant exitedDate
+    String exitedDate
 ) {
 }

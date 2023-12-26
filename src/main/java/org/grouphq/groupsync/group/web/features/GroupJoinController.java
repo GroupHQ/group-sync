@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
-import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupJoinRequestEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.RestController;

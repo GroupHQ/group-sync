@@ -7,7 +7,7 @@ import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.group.web.features.GroupStatusController;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
-import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupStatusRequestEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

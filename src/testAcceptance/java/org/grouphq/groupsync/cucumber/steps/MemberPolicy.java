@@ -18,8 +18,7 @@ import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
-import org.grouphq.groupsync.groupservice.event.daos.RequestEvent;
-import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.RequestEvent;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -48,7 +47,7 @@ import static org.awaitility.Awaitility.await;
 @Tag("AcceptanceTest")
 public class MemberPolicy {
 
-    public static final String GROUP_MEMBERS_ENDPOINT = "/groups/{groupId}/members";
+    public static final String GROUPS_ENDPOINT = "/api/groups";
     public static final String AUTHORIZATION = "Authorization";
     public static final String HTTP_BASIC_PREFIX = "Basic ";
     private static List<Group> groups = new ArrayList<>();
@@ -83,7 +82,7 @@ public class MemberPolicy {
 
     @Before("@MemberPolicy")
     public void setupOnce() {
-        final URI url = URI.create("ws://localhost:" + port + "/rsocket");
+        final URI url = URI.create("ws://localhost:" + port + "/api/rsocket");
 
         userId = UUID.randomUUID().toString();
 
@@ -109,7 +108,7 @@ public class MemberPolicy {
 
         webTestClient
             .get()
-            .uri( "/groups")
+            .uri( "/api/groups")
             .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
@@ -134,7 +133,7 @@ public class MemberPolicy {
 
     @When("I try to join the group")
     public void iTryToJoinTheGroup() {
-        requestEvent = GroupTestUtility.generateGroupJoinRequestEvent(userId, group.id(), username);
+        requestEvent = GroupTestUtility.generateGroupJoinRequestEvent(userId, username, group.id());
 
         OUTBOX_EVENTS.clear();
 
@@ -151,7 +150,7 @@ public class MemberPolicy {
         await().atMost(5, TimeUnit.SECONDS).until(() -> !OUTBOX_EVENTS.isEmpty());
     }
 
-    @Then("I should be a member of the group")
+    @Then("I should receive an event confirming my membership")
     public void iShouldBeAMemberOfTheGroup() {
         event = OUTBOX_EVENTS.getLast();
 
@@ -170,12 +169,16 @@ public class MemberPolicy {
     public void theGroupSCurrentMemberSizeShouldIncreaseByOne() {
         webTestClient
             .get()
-            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .uri(GROUPS_ENDPOINT)
             .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
-            .expectBodyList(PublicMember.class)
-            .value(members -> assertThat(members.size()).isEqualTo(group.currentGroupSize() + 1));
+            .expectBodyList(Group.class)
+            .value(groups -> {
+                final var targetGroup =
+                    groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
+                assertThat(targetGroup.members().size()).isEqualTo(group.members().size() + 1);
+            });
     }
 
     @When("I try to leave the group")
@@ -201,18 +204,21 @@ public class MemberPolicy {
     public void iShouldNoLongerBeAnActiveMemberOfThatGroup() {
         webTestClient
             .get()
-            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .uri(GROUPS_ENDPOINT)
             .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
-            .expectBodyList(PublicMember.class)
-            .value(members -> assertThat(members.size())
-                    .isEqualTo(group.currentGroupSize())); // net change of 0
+            .expectBodyList(Group.class)
+            .value(groups -> {
+                final var targetGroup =
+                    groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
+                assertThat(targetGroup.members()).noneMatch(memberInGroup -> memberInGroup.id().equals(member.id()));
+            });
     }
 
     @And("I am a member of the group")
     public void iAmAMemberOfTheGroup() throws JsonProcessingException {
-        requestEvent = GroupTestUtility.generateGroupJoinRequestEvent(userId, group.id(), username);
+        requestEvent = GroupTestUtility.generateGroupJoinRequestEvent(userId, username, group.id());
 
         OUTBOX_EVENTS.clear();
 
@@ -233,27 +239,34 @@ public class MemberPolicy {
 
         webTestClient
             .get()
-            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .uri(GROUPS_ENDPOINT)
             .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus()
             .is2xxSuccessful()
-            .expectBodyList(PublicMember.class)
-            .value(members ->
-                    assertThat(members.size()).isEqualTo(group.currentGroupSize() + 1));
+            .expectBodyList(Group.class)
+            .value(groups -> {
+                final var targetGroup =
+                    groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
+                assertThat(targetGroup.members().size()).isEqualTo(group.members().size() + 1);
+            });
     }
 
     @Then("I should not be added to the group again")
     public void iShouldNotBeAddedToTheGroupAgain() {
         webTestClient
             .get()
-            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .uri(GROUPS_ENDPOINT)
             .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
-            .expectBodyList(PublicMember.class)
-            .value(members -> assertThat(members.size())
-                    .isEqualTo(group.currentGroupSize() + 1)); // net change of +1
+            .expectBodyList(Group.class)
+            .value(groups -> {
+                final var targetGroup =
+                    groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
+                assertThat(targetGroup.members()).satisfiesOnlyOnce(
+                    memberInList -> assertThat(memberInList.id()).isEqualTo(member.id()));
+            });
     }
 
     @And("there is a second active group")
@@ -271,12 +284,17 @@ public class MemberPolicy {
     public void iShouldNotBeAddedToTheSecondGroup() {
         webTestClient
             .get()
-            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .uri(GROUPS_ENDPOINT)
             .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
-            .expectBodyList(PublicMember.class)
-            .value(members -> assertThat(members.size()).isEqualTo(group.currentGroupSize()));
+            .expectBodyList(Group.class)
+            .value(groups -> {
+                final Group targetGroup =
+                    groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
+                assertThat(targetGroup.members()).noneSatisfy(
+                    memberInList -> assertThat(memberInList.username()).isEqualTo(member.username()));
+            });
     }
 
     @When("another user tries to remove me from the group")
@@ -296,17 +314,21 @@ public class MemberPolicy {
             .verify(Duration.ofSeconds(1));
     }
 
-    @Then("I should still be in the group")
+    @Then("I should be in the group only once")
     public void iShouldStillBeInTheGroup() {
         webTestClient
             .get()
-            .uri(GROUP_MEMBERS_ENDPOINT, group.id())
+            .uri(GROUPS_ENDPOINT)
             .header(AUTHORIZATION, HTTP_BASIC_PREFIX + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()
-            .expectBodyList(PublicMember.class)
-            .value(members -> assertThat(members.size())
-                    .isEqualTo(group.currentGroupSize() + 1)); // net change of +1
+            .expectBodyList(Group.class)
+            .value(groups -> {
+                final Group targetGroup =
+                    groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
+                assertThat(targetGroup.members()).satisfiesOnlyOnce(
+                    memberInList -> assertThat(memberInList.id()).isEqualTo(member.id()));
+            });
     }
 
 }

@@ -227,7 +227,7 @@ Note that we are sending a "setup" request, which is the first request sent to a
 the connection between us and the server.
 
 ```commandline
-rsc --request --setupMetadata simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --setupMetadataMimeType message/x.rsocket.authentication.v0 --route=groups.updates.all ws://localhost:9002/rsocket
+rsc --stream --setupMetadata simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --setupMetadataMimeType message/x.rsocket.authentication.v0 --route=groups.updates.all ws://localhost:9002/api/rsocket
 ```
 <details>
 <summary>Detailed Explanation of Command Flags</summary>
@@ -256,7 +256,7 @@ For testing purposes, it's better to include the `--debug` flag to see the full 
 along with the --stacktrace flag to see the full stack trace if an error occurs:
 
 ```commandline
-rsc --request --sm simple:user:password --smmt message/x.rsocket.authentication.v0 --r=connect --stacktrace --debug ws://localhost:9002/rsocket
+rsc --request --sm simple:user:password --smmt message/x.rsocket.authentication.v0 --r=connect --stacktrace --debug ws://localhost:9002/api/rsocket
 ```
 Notice that we use the shorthands for the flags where applicable.
 
@@ -265,17 +265,17 @@ You can use the following commands to send RSocket requests to Group Sync. Note 
 
 ##### Requests a stream of updates
 ```commandline
-rsc --stream --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.updates.all --stacktrace --debug ws://localhost:9002/rsocket
+rsc --stream --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.updates.all --stacktrace --debug ws://localhost:9002/api/rsocket
 ```
 ##### Requests a stream of user-specific updates
 ```commandline
-rsc --stream --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.updates.user --stacktrace --debug ws://localhost:9002/rsocket
+rsc --stream --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.updates.user --stacktrace --debug ws://localhost:9002/api/rsocket
 ```
 ##### Requests to join a group
 ```commandline
-rsc --fnf --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.join --data "{ \"eventId\":\"0da7c964-beec-456b-b73a-0b62f1c8699b\", \"aggregateId\":189, \"websocketId\":\"user\", \"createdDate\":\"2023-09-23T19:31:35.086587900Z\", \"username\":\"Cherry\" }" ws://localhost:9002/rsocket
+rsc --fnf --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.join --data "{ \"eventId\":\"0da7c964-beec-456b-b73a-0b62f1c8699b\", \"aggregateId\":169, \"websocketId\":\"fbe943cc-b3a0-4f2e-921a-2325d64b16c9\", \"createdDate\":\"2023-09-23T19:31:35.086587900Z\", \"username\":\"Cherry\" }" ws://localhost:9002/api/rsocket
 ```
 ##### Request to leave a group
 ```commandline
-rsc --fnf --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.leave --data "{ \"eventId\":\"0da7c964-beec-456b-b73a-0b62f1c8691b\", \"aggregateId\":184, \"websocketId\":\"user\", \"createdDate\":\"2023-09-23T19:31:35.086587900Z\", \"memberId\": 5 }" ws://localhost:9002/rsocket
+rsc --fnf --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.leave --data "{ \"eventId\":\"fa0fcf99-2aef-4f2a-8173-6e4bee623e2a\", \"aggregateId\":169, \"websocketId\":\"fbe943cc-b3a0-4f2e-921a-2325d64b16c9\", \"createdDate\":\"2023-09-23T19:31:35.086587900Z\", \"memberId\": 3569 }" ws://localhost:9002/api/rsocket
 ```

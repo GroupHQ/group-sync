@@ -1,9 +1,9 @@
 package org.grouphq.groupsync.group.event;
 
-import org.grouphq.groupsync.groupservice.event.daos.GroupCreateRequestEvent;
-import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
-import org.grouphq.groupsync.groupservice.event.daos.GroupLeaveRequestEvent;
-import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupCreateRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupJoinRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupLeaveRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupStatusRequestEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Component;

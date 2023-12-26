@@ -12,7 +12,7 @@ Feature: Groups
   Scenario: User joining group
     Given there is an active group
     When I try to join the group
-    Then I should be a member of the group
+    Then I should receive an event confirming my membership
     And the group's current member size should increase by one
 
   @MemberPolicy
@@ -42,4 +42,4 @@ Feature: Groups
     Given there is an active group
     And I am a member of the group
     When another user tries to remove me from the group
-    Then I should still be in the group
+    Then I should be in the group only once
