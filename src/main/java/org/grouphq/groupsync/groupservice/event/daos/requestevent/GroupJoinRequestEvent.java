@@ -1,4 +1,4 @@
-package org.grouphq.groupsync.groupservice.event.daos;
+package org.grouphq.groupsync.groupservice.event.daos.requestevent;
 
 import jakarta.validation.constraints.NotBlank;
 import java.time.Instant;

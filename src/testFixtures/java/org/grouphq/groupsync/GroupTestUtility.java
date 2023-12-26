@@ -11,16 +11,17 @@ import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
-import org.grouphq.groupsync.groupservice.event.daos.GroupCreateRequestEvent;
-import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
-import org.grouphq.groupsync.groupservice.event.daos.GroupLeaveRequestEvent;
-import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupCreateRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupJoinRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupLeaveRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupStatusRequestEvent;
 
 /**
  * Utility class for common functionality needed by multiple tests.
  */
 public final class GroupTestUtility {
 
+    public static final Faker FAKER = new Faker();
     static final String OWNER = "system";
 
     private GroupTestUtility() {}
@@ -40,7 +41,6 @@ public final class GroupTestUtility {
         final Faker faker = new Faker();
 
         // Generate capacities and ensure space for at least 50 members to join
-        final int currentCapacity = faker.number().numberBetween(1, 50);
         final int maxCapacity = faker.number().numberBetween(100, 150);
 
         return new Group(
@@ -48,14 +48,14 @@ public final class GroupTestUtility {
             faker.lorem().sentence(),
             faker.lorem().sentence(20),
             maxCapacity,
-            currentCapacity,
             status,
-            Instant.now(),
+            null,
             Instant.now(),
             Instant.now(),
             OWNER,
             OWNER,
-            0
+            0,
+            null
         );
     }
 
@@ -68,25 +68,22 @@ public final class GroupTestUtility {
      * @return a Group object with all details.
      */
     public static Group generateFullGroupDetails(Long groupId, GroupStatus status) {
-        final Faker faker = new Faker();
 
-        // Generate capacities and ensure space for at least 50 members to join
-        final int currentCapacity = faker.number().numberBetween(1, 50);
-        final int maxCapacity = faker.number().numberBetween(100, 150);
+        final int maxCapacity = FAKER.number().numberBetween(100, 150);
 
         return new Group(
             groupId,
-            faker.lorem().sentence(),
-            faker.lorem().sentence(20),
+            FAKER.lorem().sentence(),
+            FAKER.lorem().sentence(20),
             maxCapacity,
-            currentCapacity,
             status,
-            Instant.now(),
+            null,
             Instant.now(),
             Instant.now(),
             OWNER,
             OWNER,
-            0
+            0,
+            null
         );
     }
 
@@ -94,30 +91,27 @@ public final class GroupTestUtility {
      * Overloaded method for {@link #generateFullGroupDetails(GroupStatus status)}.
      *
      * @param maxGroupSize maximum number of users that can belong to the group.
-     * @param currentGroupSize current number of users that are part of the group.
      * @param status the status of the group.
      *
      * @return a group object with all details.
      */
     public static Group generateFullGroupDetails(
         int maxGroupSize,
-        int currentGroupSize,
         GroupStatus status) {
-        final Faker faker = new Faker();
 
         return new Group(
-            faker.number().randomNumber(12, true),
-            faker.lorem().sentence(),
-            faker.lorem().sentence(20),
+            FAKER.number().randomNumber(12, true),
+            FAKER.lorem().sentence(),
+            FAKER.lorem().sentence(20),
             maxGroupSize,
-            currentGroupSize,
             status,
-            Instant.now(),
+            null,
             Instant.now(),
             Instant.now(),
             OWNER,
             OWNER,
-            0
+            0,
+            null
         );
     }
 
@@ -130,15 +124,13 @@ public final class GroupTestUtility {
      * @return A group object with all details.
      */
     public static Member generateFullMemberDetails() {
-        final Faker faker = new Faker();
 
         return new Member(
-            faker.number().randomNumber(12, true),
+            FAKER.number().randomNumber(12, true),
             UUID.randomUUID(),
-            faker.name().firstName(),
-            faker.number().randomNumber(12, true),
+            FAKER.name().firstName(),
+            FAKER.number().randomNumber(12, true),
             MemberStatus.ACTIVE,
-            Instant.now(),
             null,
             Instant.now(),
             Instant.now(),
@@ -160,15 +152,13 @@ public final class GroupTestUtility {
      * @return A group object with all details.
      */
     public static Member generateFullMemberDetails(String username, Long groupId) {
-        final Faker faker = new Faker();
 
         return new Member(
-            faker.number().randomNumber(12, true),
+            FAKER.number().randomNumber(12, true),
             UUID.randomUUID(),
             username,
             groupId,
             MemberStatus.ACTIVE,
-            Instant.now(),
             null,
             Instant.now(),
             Instant.now(),
@@ -186,13 +176,12 @@ public final class GroupTestUtility {
      * @return a GroupJoinRequestEvent object with all details.
      */
     public static GroupJoinRequestEvent generateGroupJoinRequestEvent() {
-        final Faker faker = new Faker();
 
         return new GroupJoinRequestEvent(
             UUID.randomUUID(),
-            faker.number().randomNumber(12, true),
-            faker.name().firstName(),
-            faker.number().digits(36),
+            FAKER.number().randomNumber(12, true),
+            FAKER.name().firstName(),
+            UUID.randomUUID().toString(),
             Instant.now()
         );
     }
@@ -205,13 +194,12 @@ public final class GroupTestUtility {
      * @return a GroupJoinRequestEvent object with all details.
      */
     public static GroupJoinRequestEvent generateGroupJoinRequestEvent(Long groupId) {
-        final Faker faker = new Faker();
 
         return new GroupJoinRequestEvent(
             UUID.randomUUID(),
             groupId,
-            faker.name().firstName(),
-            faker.number().digits(36),
+            FAKER.name().firstName(),
+            UUID.randomUUID().toString(),
             Instant.now()
         );
     }
@@ -219,14 +207,14 @@ public final class GroupTestUtility {
     /**
      * Overloaded method for {@link #generateGroupJoinRequestEvent()}.
      *
-     * @param groupId the group ID the member is requesting to join.
      * @param username the username of the member.
-     * @param websocketId the web socket ID of the member.
+     * @param groupId the group ID the member is requesting to join.
+     * @param websocketId the websocket ID of the member.
      *
      * @return a GroupJoinRequestEvent object with all details.
      */
     public static GroupJoinRequestEvent generateGroupJoinRequestEvent(
-        String websocketId, Long groupId, String username) {
+        String websocketId, String username, Long groupId) {
 
         return new GroupJoinRequestEvent(
             UUID.randomUUID(),
@@ -247,13 +235,12 @@ public final class GroupTestUtility {
      * @return a GroupLeaveRequestEvent object with all details.
      */
     public static GroupLeaveRequestEvent generateGroupLeaveRequestEvent() {
-        final Faker faker = new Faker();
 
         return new GroupLeaveRequestEvent(
             UUID.randomUUID(),
-            faker.number().randomNumber(12, true),
-            faker.number().randomNumber(12, true),
-            faker.number().digits(36),
+            FAKER.number().randomNumber(12, true),
+            FAKER.number().randomNumber(12, true),
+            UUID.randomUUID().toString(),
             Instant.now()
         );
     }
@@ -269,13 +256,11 @@ public final class GroupTestUtility {
     public static GroupLeaveRequestEvent generateGroupLeaveRequestEvent(
         Long groupId, Long memberId) {
 
-        final Faker faker = new Faker();
-
         return new GroupLeaveRequestEvent(
             UUID.randomUUID(),
             groupId,
             memberId,
-            faker.number().digits(36),
+            UUID.randomUUID().toString(),
             Instant.now()
         );
     }
@@ -289,7 +274,6 @@ public final class GroupTestUtility {
      *
      * @return a GroupLeaveRequestEvent object with all details.
      */
-
     public static GroupLeaveRequestEvent generateGroupLeaveRequestEvent(
         String websocketId, Long groupId, Long memberId) {
 
@@ -308,20 +292,16 @@ public final class GroupTestUtility {
      * @return a GroupCreateRequestEvent object with all details.
      */
     public static GroupCreateRequestEvent generateGroupCreateRequestEvent() {
-        final Faker faker = new Faker();
 
-        // Generate capacities and ensure space for at least 50 members to join
-        final int currentCapacity = faker.number().numberBetween(1, 50);
-        final int maxCapacity = faker.number().numberBetween(100, 150);
+        final int maxCapacity = FAKER.number().numberBetween(100, 150);
 
         return new GroupCreateRequestEvent(
             UUID.randomUUID(),
-            faker.lorem().sentence(),
-            faker.lorem().sentence(20),
+            FAKER.lorem().sentence(),
+            FAKER.lorem().sentence(20),
             maxCapacity,
-            currentCapacity,
             OWNER,
-            faker.number().digits(36),
+            UUID.randomUUID().toString(),
             Instant.now()
         );
     }
@@ -330,23 +310,19 @@ public final class GroupTestUtility {
      * Overloaded method for {@link #generateGroupCreateRequestEvent()}.
      *
      * @param maxCapacity the maximum number of members that can join the group.
-     * @param currentCapacity the current number of members that are part of the group.
      *
      * @return a GroupCreateRequestEvent object with all details.
      */
     public static GroupCreateRequestEvent generateGroupCreateRequestEvent(
-        int maxCapacity, int currentCapacity) {
-
-        final Faker faker = new Faker();
+        int maxCapacity) {
 
         return new GroupCreateRequestEvent(
             UUID.randomUUID(),
-            faker.lorem().sentence(),
-            faker.lorem().sentence(20),
+            FAKER.lorem().sentence(),
+            FAKER.lorem().sentence(20),
             maxCapacity,
-            currentCapacity,
             OWNER,
-            faker.number().digits(36),
+            UUID.randomUUID().toString(),
             Instant.now()
         );
     }
@@ -361,13 +337,12 @@ public final class GroupTestUtility {
      */
     public static GroupStatusRequestEvent generateGroupStatusRequestEvent(
         Long groupId, GroupStatus status) {
-        final Faker faker = new Faker();
 
         return new GroupStatusRequestEvent(
             UUID.randomUUID(),
             groupId,
             status,
-            faker.number().digits(36),
+            UUID.randomUUID().toString(),
             Instant.now()
         );
     }
@@ -378,12 +353,11 @@ public final class GroupTestUtility {
      * @return an OutboxEvent object with all details.
      */
     public static OutboxEvent generateOutboxEvent() {
-        final Faker faker = new Faker();
 
         return new OutboxEvent(
             UUID.randomUUID(),
-            faker.number().randomNumber(12, true),
-            faker.number().digits(36),
+            FAKER.number().randomNumber(12, true),
+            UUID.randomUUID().toString(),
             AggregateType.GROUP,
             EventType.GROUP_CREATED,
             "{\"status\": \"ACTIVE\"}",

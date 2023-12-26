@@ -11,8 +11,6 @@ import org.grouphq.groupsync.config.SecurityConfig;
 import org.grouphq.groupsync.group.sync.GroupFetchService;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
-import org.grouphq.groupsync.groupservice.domain.members.Member;
-import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -60,32 +58,5 @@ class GroupControllerTest {
             });
 
         verify(groupFetchService).getGroups();
-    }
-
-    @Test
-    @DisplayName("When there are group members, then return a list of group members as public")
-    void returnGroupMembers() {
-        final PublicMember[] testMembers = {
-            Member.toPublicMember(GroupTestUtility.generateFullMemberDetails("Member A", 1L)),
-            Member.toPublicMember(GroupTestUtility.generateFullMemberDetails("Member B", 1L))
-        };
-
-        given(groupFetchService.getGroupMembers(1L)).willReturn(Flux.just(testMembers));
-
-        final String credentials = UUID.randomUUID() + ":password";
-        final String authorization = Base64.getEncoder().encodeToString(credentials.getBytes());
-
-        webTestClient
-            .get()
-            .uri("/api/groups" + "/1" + "/members")
-            .header("Authorization", "Basic " + authorization)
-            .exchange()
-            .expectStatus().is2xxSuccessful()
-            .expectBodyList(PublicMember.class).value(members -> {
-                assertThat(members).isNotEmpty();
-                assertThat(members).containsExactlyInAnyOrder(testMembers);
-            });
-
-        verify(groupFetchService).getGroupMembers(1L);
     }
 }

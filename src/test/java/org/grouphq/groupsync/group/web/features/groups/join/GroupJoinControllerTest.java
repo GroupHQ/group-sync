@@ -6,7 +6,7 @@ import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
 import org.grouphq.groupsync.group.web.features.GroupJoinController;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
-import org.grouphq.groupsync.groupservice.event.daos.GroupJoinRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupJoinRequestEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

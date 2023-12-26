@@ -37,7 +37,7 @@ public class ActiveGroupsPolicy {
 
         groupResponse = webTestClient
             .get()
-            .uri("/groups")
+            .uri("/api/groups")
             .header("Authorization", "Basic " + httpBasicCredentialsEncoded)
             .exchange()
             .expectStatus().is2xxSuccessful()

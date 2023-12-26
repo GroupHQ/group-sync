@@ -37,7 +37,7 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
     public static PublicOutboxEvent convertOutboxEvent(OutboxEvent outboxEvent) {
         return switch (outboxEvent.getEventType()) {
             case GROUP_CREATED -> convertGroupCreated(outboxEvent);
-            case GROUP_STATUS_UPDATED -> convertGroupStatusUpdated(outboxEvent);
+            case GROUP_UPDATED -> convertGroupStatusUpdated(outboxEvent);
             case MEMBER_JOINED -> convertMemberJoined(outboxEvent);
             case MEMBER_LEFT -> convertMemberLeft(outboxEvent);
             default -> convertDefault(outboxEvent);

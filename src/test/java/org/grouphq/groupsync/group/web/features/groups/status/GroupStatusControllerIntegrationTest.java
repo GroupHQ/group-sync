@@ -8,7 +8,7 @@ import java.net.URI;
 import java.util.UUID;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
-import org.grouphq.groupsync.groupservice.event.daos.GroupStatusRequestEvent;
+import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupStatusRequestEvent;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
