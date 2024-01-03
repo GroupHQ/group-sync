@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.UUID;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
@@ -16,6 +17,7 @@ import org.grouphq.groupsync.config.ClientProperties;
 import org.grouphq.groupsync.group.domain.GroupServiceUnavailableException;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
+import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +30,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @Tag("UnitTest")
@@ -106,4 +109,44 @@ class GroupServiceClientTest {
             .expectError(GroupServiceUnavailableException.class)
             .verify(Duration.ofSeconds(1));
     }
+
+    @Test
+    @DisplayName("When there is a member for a user, then return the member")
+    void whenMemberExistsThenReturnMember() throws JsonProcessingException {
+        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(10_000L);
+
+        final var testMember = Member.of(UUID.randomUUID(), "test-username", 1L);
+
+        final var memberAsJson = objectMapper.writeValueAsString(testMember);
+
+        final var mockResponse = new MockResponse()
+            .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(memberAsJson);
+
+        mockWebServer.enqueue(mockResponse);
+
+        final Mono<Member> member = groupServiceClient.getMyMember(testMember.websocketId().toString());
+
+        StepVerifier.create(member)
+            .expectNext(testMember)
+            .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Timeout and retry appropriately when group service does not respond with member for user")
+    void whenGroupServiceTimesOutOnMemberFetchThenReturnException() {
+        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(1L);
+
+        final var mockResponse = new MockResponse()
+            .setSocketPolicy(SocketPolicy.NO_RESPONSE);
+
+        mockWebServer.enqueue(mockResponse);
+
+        final Flux<Group> groups = groupServiceClient.getGroups();
+
+        StepVerifier.create(groups)
+            .expectError(GroupServiceUnavailableException.class)
+            .verify(Duration.ofSeconds(1));
+    }
+
 }

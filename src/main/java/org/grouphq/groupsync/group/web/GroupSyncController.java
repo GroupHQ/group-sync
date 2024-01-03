@@ -3,8 +3,10 @@ package org.grouphq.groupsync.group.web;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
+import org.grouphq.groupsync.group.sync.GroupFetchService;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
+import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -22,6 +24,8 @@ import reactor.core.publisher.Mono;
 public class GroupSyncController {
 
     private final GroupUpdateService groupUpdateService;
+
+    private final GroupFetchService groupFetchService;
 
     @MessageMapping("groups.updates.all")
     public Flux<PublicOutboxEvent> getPublicUpdates() {
@@ -49,6 +53,16 @@ public class GroupSyncController {
             .doOnError(throwable -> log.error("Error while streaming user outbox events. "
                                               + "Stream will be terminated.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("User update stream closed"));
+    }
+
+    @MessageMapping("groups.user.member")
+    public Mono<Member> getMyMember() {
+        return ReactiveSecurityContextHolder.getContext()
+            .map(SecurityContext::getAuthentication)
+            .flatMap(authentication -> {
+                final String websocketId = authentication.getName();
+                return groupFetchService.getMyMember(websocketId);
+            });
     }
 
     private Mono<Boolean> monoIsUserEventOwner(OutboxEvent outboxEvent) {

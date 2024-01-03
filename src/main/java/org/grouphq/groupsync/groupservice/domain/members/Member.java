@@ -44,6 +44,12 @@ public record Member(
             null, null, null, null, 0);
     }
 
+    public static Member of(UUID websocketId, String username, Long groupId) {
+        return new Member(null, websocketId, username, groupId,
+            MemberStatus.ACTIVE, null, null, null,
+            null, null, 0);
+    }
+
     public static PublicMember toPublicMember(Member member) {
         return new PublicMember(
             member.id(), member.username(), member.groupId(),
