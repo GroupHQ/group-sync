@@ -25,6 +25,7 @@ dependencyCheck {
     failBuildOnCVSS = 8.0 // fails on mid-high to critical severity scores
     nvd {
         apiKey = project.findProperty('nvdApiKey') ?: 'NONE'
+        delay = 8000 // higher than default of 2000 due to API issues for initial download
     }
 }
 
