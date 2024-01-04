@@ -18,6 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.rsocket.core.PayloadSocketAcceptorInterceptor;
 import org.springframework.security.rsocket.metadata.SimpleAuthenticationEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
 import reactor.core.publisher.Mono;
 
 /**
@@ -36,7 +37,7 @@ public class SecurityConfig {
                 .pathMatchers("/actuator/**").permitAll()
                 .anyExchange().authenticated())
             .httpBasic(Customizer.withDefaults())
-            .csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .csrf(csrf -> csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()))
             .build();
     }
 
