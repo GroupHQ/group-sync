@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.sync;
 
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
@@ -20,9 +21,9 @@ public class GroupUpdateService {
     private final Sinks.Many<OutboxEvent> userUpdatesSink;
 
     public GroupUpdateService() {
-        publicUpdatesSink = Sinks.many().replay().limit(100);
+        publicUpdatesSink = Sinks.many().replay().limit(Duration.ofSeconds(5));
 
-        userUpdatesSink = Sinks.many().replay().limit(100);
+        userUpdatesSink = Sinks.many().replay().limit(Duration.ofSeconds(5));
     }
 
     public Flux<PublicOutboxEvent> publicUpdatesStream() {

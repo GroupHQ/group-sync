@@ -279,3 +279,9 @@ rsc --fnf --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt messa
 ```commandline
 rsc --fnf --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.leave --data "{ \"eventId\":\"fa0fcf99-2aef-4f2a-8173-6e4bee623e2a\", \"aggregateId\":169, \"websocketId\":\"fbe943cc-b3a0-4f2e-921a-2325d64b16c9\", \"createdDate\":\"2023-09-23T19:31:35.086587900Z\", \"memberId\": 3569 }" ws://localhost:9002/api/rsocket
 ```
+
+#### Request to get user's current active member
+```commandline
+rsc --request --sm simple:32290501-5681-45f1-a14d-73c29d11d6b7:password --smmt message/x.rsocket.authentication.v0 --r=groups.user.member ws://localhost:9002/api/rsocket
+```
+

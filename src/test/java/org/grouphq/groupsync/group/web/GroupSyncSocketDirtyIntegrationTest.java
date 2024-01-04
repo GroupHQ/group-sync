@@ -1,6 +1,7 @@
 package org.grouphq.groupsync.group.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 
 import io.rsocket.metadata.WellKnownMimeType;
 import java.net.URI;
@@ -9,6 +10,8 @@ import java.util.ArrayList;
 import java.util.UUID;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
+import org.grouphq.groupsync.group.sync.GroupFetchService;
+import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.junit.jupiter.api.AfterAll;
@@ -19,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
@@ -30,6 +34,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -37,6 +42,9 @@ import reactor.test.StepVerifier;
 @Import(TestChannelBinderConfiguration.class)
 @Tag("IntegrationTest")
 class GroupSyncSocketDirtyIntegrationTest {
+
+    @MockBean
+    private GroupFetchService groupFetchService;
 
     private static RSocketRequester requester;
 
@@ -145,5 +153,20 @@ class GroupSyncSocketDirtyIntegrationTest {
             })
             .thenCancel()
             .verify(Duration.ofSeconds(1));
+    }
+
+    @Test
+    @DisplayName("Test RSocket integration for getting a user's member details")
+    void testGetUsersMemberDetails() {
+        final Member member = Member.of(UUID.fromString(USER_ID), "user", 1L);
+        given(groupFetchService.getMyMember(member.websocketId().toString())).willReturn(Mono.just(member));
+
+        final Mono<Member> memberDetails = requester
+            .route("groups.user.member")
+            .retrieveMono(Member.class);
+
+        StepVerifier.create(memberDetails)
+            .expectNext(member)
+            .verifyComplete();
     }
 }
