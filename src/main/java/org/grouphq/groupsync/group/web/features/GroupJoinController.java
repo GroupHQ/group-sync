@@ -24,7 +24,7 @@ public class GroupJoinController {
     @MessageMapping("groups.join")
     public Mono<Void> joinGroup(GroupJoinRequestEvent groupJoinRequestEvent) {
         return groupEventPublisher.publishGroupJoinRequest(groupJoinRequestEvent)
-            .doOnSuccess(unused -> log.debug("Sent join request"))
+            .doOnSuccess(unused -> log.debug("Sent join request: {}", groupJoinRequestEvent))
             .doOnError(throwable -> log.error("Error while joining group.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Cannot join group"));
     }

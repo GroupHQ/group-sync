@@ -273,7 +273,7 @@ rsc --stream --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt me
 ```
 ##### Requests to join a group
 ```commandline
-rsc --fnf --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.join --data "{ \"eventId\":\"0da7c964-beec-456b-b73a-0b62f1c8699b\", \"aggregateId\":169, \"websocketId\":\"fbe943cc-b3a0-4f2e-921a-2325d64b16c9\", \"createdDate\":\"2023-09-23T19:31:35.086587900Z\", \"username\":\"Cherry\" }" ws://localhost:9002/api/rsocket
+rsc --fnf --sm simple:f315fbb2-028b-4784-8ce5-cc5e4f4c672b:password --smmt message/x.rsocket.authentication.v0 --r=groups.join --data "{ \"eventId\":\"0da7c964-beec-456b-b73a-0b62f1c8699b\", \"aggregateId\":1695, \"websocketId\":\"fbe943cc-b3a0-4f2e-921a-2325d64b16c9\", \"username\":\"Mojo\" }" ws://localhost:9002/api/rsocket
 ```
 ##### Request to leave a group
 ```commandline
