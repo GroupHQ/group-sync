@@ -22,10 +22,9 @@ public class GroupStatusRequestEvent extends RequestEvent {
         UUID eventId,
         Long groupId,
         GroupStatus newStatus,
-        String websocketId,
-        Instant createdDate
+        String websocketId
     ) {
-        super(eventId, groupId, websocketId, createdDate);
+        super(eventId, groupId, websocketId, Instant.now());
         this.newStatus = newStatus;
     }
 }
