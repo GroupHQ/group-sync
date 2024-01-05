@@ -20,8 +20,8 @@ public class GroupJoinRequestEvent extends RequestEvent {
     private final String username;
 
     public GroupJoinRequestEvent(UUID eventId, Long groupId, String username,
-                                 String websocketId, Instant createdDate) {
-        super(eventId, groupId, websocketId, createdDate);
+                                 String websocketId) {
+        super(eventId, groupId, websocketId, Instant.now());
         this.username = username;
     }
 }
