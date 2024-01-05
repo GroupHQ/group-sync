@@ -24,7 +24,7 @@ public class GroupStatusController {
     @MessageMapping("groups.status")
     public Mono<Void> updateGroupStatus(GroupStatusRequestEvent groupStatusRequestEvent) {
         return groupEventPublisher.publishGroupUpdateStatusRequest(groupStatusRequestEvent)
-            .doOnSuccess(unused -> log.debug("Sent update group status request."))
+            .doOnSuccess(unused -> log.debug("Sent update group status request: {}", groupStatusRequestEvent))
             .doOnError(throwable -> log.error("Error while updating group status.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Cannot update group status"));
     }

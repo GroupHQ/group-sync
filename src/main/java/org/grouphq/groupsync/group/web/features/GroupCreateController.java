@@ -24,7 +24,7 @@ public class GroupCreateController {
     @MessageMapping("groups.create")
     public Mono<Void> createGroup(GroupCreateRequestEvent groupCreateRequestEvent) {
         return groupEventPublisher.publishGroupCreateRequest(groupCreateRequestEvent)
-            .doOnSuccess(unused -> log.debug("Sent create group request."))
+            .doOnSuccess(unused -> log.debug("Sent create group request: {}", groupCreateRequestEvent))
             .doOnError(throwable -> log.error("Error while creating group.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Cannot create group"));
     }

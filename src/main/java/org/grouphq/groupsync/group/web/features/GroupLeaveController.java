@@ -24,7 +24,7 @@ public class GroupLeaveController {
     @MessageMapping("groups.leave")
     public Mono<Void> leaveGroup(GroupLeaveRequestEvent groupLeaveRequestEvent) {
         return groupEventPublisher.publishGroupLeaveRequest(groupLeaveRequestEvent)
-            .doOnSuccess(unused -> log.debug("Sent leave request"))
+            .doOnSuccess(unused -> log.debug("Sent leave request: {}", groupLeaveRequestEvent))
             .doOnError(throwable -> log.error("Error while leaving group.", throwable))
             .onErrorMap(unusedThrowable -> new InternalServerError("Cannot leave group"));
     }
