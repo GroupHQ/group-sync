@@ -1,9 +1,12 @@
 package org.grouphq.groupsync.group.web.features.groups.leave;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
+import org.grouphq.groupsync.group.security.UserService;
 import org.grouphq.groupsync.group.web.features.GroupLeaveController;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
 import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupLeaveRequestEvent;
@@ -13,15 +16,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.test.context.annotation.SecurityTestExecutionListeners;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, SpringExtension.class})
+@WithMockUser
 @SecurityTestExecutionListeners
 @Tag("UnitTest")
 class GroupLeaveControllerTest {
+
+    @Spy
+    private UserService userService;
 
     @Mock
     private GroupEventPublisher groupEventPublisher;
@@ -38,11 +48,18 @@ class GroupLeaveControllerTest {
     @Test
     @DisplayName("Test RSocket integration for leaving a group")
     void testLeaveGroup() {
-        final GroupLeaveRequestEvent event = GroupTestUtility.generateGroupLeaveRequestEvent();
+        final GroupLeaveRequestEvent originalRequest = GroupTestUtility.generateGroupLeaveRequestEvent();
 
-        given(groupEventPublisher.publishGroupLeaveRequest(event)).willReturn(Mono.empty());
+        given(groupEventPublisher.publishGroupLeaveRequest(
+            argThat(publishedRequest -> originalRequest.getAggregateId().equals(publishedRequest.getAggregateId())
+                    && originalRequest.getMemberId().equals(publishedRequest.getMemberId())
+                    && !originalRequest.getEventId().equals(publishedRequest.getEventId())
+                    && !originalRequest.getCreatedDate().equals(publishedRequest.getCreatedDate())
+                    && !originalRequest.getWebsocketId().equals(publishedRequest.getWebsocketId())
+            ))
+        ).willReturn(Mono.empty());
 
-        StepVerifier.create(groupSocketController.leaveGroup(event))
+        StepVerifier.create(groupSocketController.leaveGroup(originalRequest))
                 .expectComplete()
                 .verify();
     }
@@ -52,7 +69,7 @@ class GroupLeaveControllerTest {
     void testLeaveGroupError() {
         final GroupLeaveRequestEvent event = GroupTestUtility.generateGroupLeaveRequestEvent();
 
-        given(groupEventPublisher.publishGroupLeaveRequest(event))
+        given(groupEventPublisher.publishGroupLeaveRequest(any(GroupLeaveRequestEvent.class)))
                 .willReturn(Mono.error(new RuntimeException(DUMMY_MESSAGE)));
 
         final String expectedErrorString = "Cannot leave group" + INTERNAL_SERVER_ERROR_SUFFIX;

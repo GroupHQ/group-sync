@@ -1,9 +1,12 @@
 package org.grouphq.groupsync.group.web.features.groups.status;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
+import org.grouphq.groupsync.group.security.UserService;
 import org.grouphq.groupsync.group.web.features.GroupStatusController;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
@@ -14,15 +17,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.test.context.annotation.SecurityTestExecutionListeners;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, SpringExtension.class})
+@WithMockUser
 @SecurityTestExecutionListeners
 @Tag("UnitTest")
 class GroupStatusControllerTest {
+
+    @Spy
+    private UserService userService;
 
     @Mock
     private GroupEventPublisher groupEventPublisher;
@@ -39,12 +49,19 @@ class GroupStatusControllerTest {
     @Test
     @DisplayName("Test RSocket integration for updating a group status")
     void testUpdateGroupStatus() {
-        final GroupStatusRequestEvent event =
+        final GroupStatusRequestEvent originalRequest =
             GroupTestUtility.generateGroupStatusRequestEvent(1L, GroupStatus.DISBANDED);
 
-        given(groupEventPublisher.publishGroupUpdateStatusRequest(event)).willReturn(Mono.empty());
+        given(groupEventPublisher.publishGroupUpdateStatusRequest(
+            argThat(publishedRequest -> originalRequest.getAggregateId().equals(publishedRequest.getAggregateId())
+                    && originalRequest.getNewStatus().equals(publishedRequest.getNewStatus())
+                    && !originalRequest.getEventId().equals(publishedRequest.getEventId())
+                    && !originalRequest.getCreatedDate().equals(publishedRequest.getCreatedDate())
+                    && !originalRequest.getWebsocketId().equals(publishedRequest.getWebsocketId())
+            ))
+        ).willReturn(Mono.empty());
 
-        StepVerifier.create(groupSocketController.updateGroupStatus(event))
+        StepVerifier.create(groupSocketController.updateGroupStatus(originalRequest))
             .expectComplete()
             .verify();
     }
@@ -55,7 +72,7 @@ class GroupStatusControllerTest {
         final GroupStatusRequestEvent event =
             GroupTestUtility.generateGroupStatusRequestEvent(1L, GroupStatus.DISBANDED);
 
-        given(groupEventPublisher.publishGroupUpdateStatusRequest(event))
+        given(groupEventPublisher.publishGroupUpdateStatusRequest(any(GroupStatusRequestEvent.class)))
             .willReturn(Mono.error(new RuntimeException(DUMMY_MESSAGE)));
 
         final String expectedErrorString =

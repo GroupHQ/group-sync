@@ -25,9 +25,10 @@ public class GroupLeaveRequestEvent extends RequestEvent {
         UUID eventId,
         Long groupId,
         Long memberId,
-        String websocketId
+        String websocketId,
+        Instant createdDate
     ) {
-        super(eventId, groupId, websocketId, Instant.now());
+        super(eventId, groupId, websocketId, createdDate);
         this.memberId = memberId;
     }
 }

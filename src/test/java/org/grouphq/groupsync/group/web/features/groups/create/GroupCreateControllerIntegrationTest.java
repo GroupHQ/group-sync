@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.rsocket.metadata.WellKnownMimeType;
+import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
 import org.grouphq.groupsync.GroupTestUtility;
@@ -69,13 +70,13 @@ class GroupCreateControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Test RSocket integration with group creation requests")
-    void testSocketIntegrationWithGroupCreationRequests() {
-        final var createRequestEvent = GroupTestUtility.generateGroupCreateRequestEvent();
+    @DisplayName("Only accepts new group info for group creation requests")
+    void testSocketIntegrationWithGroupCreationRequests() throws IOException {
+        final var originalRequest = GroupTestUtility.generateGroupCreateRequestEvent();
 
         final Mono<Void> groupCreateRequest = requester
             .route("groups.create")
-            .data(createRequestEvent)
+            .data(originalRequest)
             .retrieveMono(Void.class);
 
         StepVerifier.create(groupCreateRequest)
@@ -85,8 +86,20 @@ class GroupCreateControllerIntegrationTest {
             outputDestination.receive(1000, groupCreateRequestDestination);
 
         assertThat(message).isNotNull();
-        assertThat(
-            objectMapper.convertValue(createRequestEvent, GroupCreateRequestEvent.class))
-            .isEqualTo(createRequestEvent);
+        assertThat(objectMapper.readValue(message.getPayload(), GroupCreateRequestEvent.class))
+            .satisfies(forwardedRequest -> {
+                assertThat(forwardedRequest.getTitle())
+                    .isEqualTo(originalRequest.getTitle());
+                assertThat(forwardedRequest.getDescription())
+                    .isEqualTo(originalRequest.getDescription());
+                assertThat(forwardedRequest.getMaxGroupSize())
+                    .isEqualTo(originalRequest.getMaxGroupSize());
+                assertThat(forwardedRequest.getEventId())
+                    .isNotEqualTo(originalRequest.getEventId());
+                assertThat(forwardedRequest.getCreatedDate()).isAfter(originalRequest.getCreatedDate());
+                assertThat(forwardedRequest.getCreatedBy())
+                    .isEqualTo(USER_ID);
+                assertThat(forwardedRequest.getWebsocketId()).isEqualTo(USER_ID);
+            });
     }
 }

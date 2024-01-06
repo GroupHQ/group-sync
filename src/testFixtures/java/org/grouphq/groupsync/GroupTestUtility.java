@@ -181,7 +181,8 @@ public final class GroupTestUtility {
             UUID.randomUUID(),
             FAKER.number().randomNumber(12, true),
             FAKER.name().firstName(),
-            UUID.randomUUID().toString()
+            UUID.randomUUID().toString(),
+            Instant.now()
         );
     }
 
@@ -198,7 +199,8 @@ public final class GroupTestUtility {
             UUID.randomUUID(),
             groupId,
             FAKER.name().firstName(),
-            UUID.randomUUID().toString()
+            UUID.randomUUID().toString(),
+            Instant.now()
         );
     }
 
@@ -218,7 +220,8 @@ public final class GroupTestUtility {
             UUID.randomUUID(),
             groupId,
             username,
-            websocketId
+            websocketId,
+            Instant.now()
         );
     }
 
@@ -237,7 +240,8 @@ public final class GroupTestUtility {
             UUID.randomUUID(),
             FAKER.number().randomNumber(12, true),
             FAKER.number().randomNumber(12, true),
-            UUID.randomUUID().toString()
+            UUID.randomUUID().toString(),
+            Instant.now()
         );
     }
 
@@ -256,7 +260,8 @@ public final class GroupTestUtility {
             UUID.randomUUID(),
             groupId,
             memberId,
-            UUID.randomUUID().toString()
+            UUID.randomUUID().toString(),
+            Instant.now()
         );
     }
 
@@ -276,7 +281,8 @@ public final class GroupTestUtility {
             UUID.randomUUID(),
             groupId,
             memberId,
-            websocketId
+            websocketId,
+            Instant.now()
         );
     }
 
@@ -295,7 +301,8 @@ public final class GroupTestUtility {
             FAKER.lorem().sentence(20),
             maxCapacity,
             OWNER,
-            UUID.randomUUID().toString()
+            UUID.randomUUID().toString(),
+            Instant.now()
         );
     }
 
@@ -315,7 +322,8 @@ public final class GroupTestUtility {
             FAKER.lorem().sentence(20),
             maxCapacity,
             OWNER,
-            UUID.randomUUID().toString()
+            UUID.randomUUID().toString(),
+            Instant.now()
         );
     }
 
@@ -334,7 +342,8 @@ public final class GroupTestUtility {
             UUID.randomUUID(),
             groupId,
             status,
-            UUID.randomUUID().toString()
+            UUID.randomUUID().toString(),
+            Instant.now()
         );
     }
 

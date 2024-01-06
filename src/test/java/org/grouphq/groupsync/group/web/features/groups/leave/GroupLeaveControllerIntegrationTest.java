@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.rsocket.metadata.WellKnownMimeType;
+import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
 import org.grouphq.groupsync.GroupTestUtility;
@@ -69,13 +70,13 @@ class GroupLeaveControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Test RSocket integration with group leave requests")
-    void testSocketIntegrationWithGroupLeaveRequests() {
-        final var groupLeaveRequestEvent = GroupTestUtility.generateGroupLeaveRequestEvent();
+    @DisplayName("Only accepts group Id and member Id for group leave requests")
+    void testSocketIntegrationWithGroupLeaveRequests() throws IOException {
+        final var originalRequest = GroupTestUtility.generateGroupLeaveRequestEvent();
 
         final Mono<Void> groupLeaveRequest = requester
             .route("groups.leave")
-            .data(groupLeaveRequestEvent)
+            .data(originalRequest)
             .retrieveMono(Void.class);
 
         StepVerifier.create(groupLeaveRequest)
@@ -85,7 +86,13 @@ class GroupLeaveControllerIntegrationTest {
             outputDestination.receive(1000, groupLeaveRequestDestination);
 
         assertThat(message).isNotNull();
-        assertThat(objectMapper.convertValue(groupLeaveRequestEvent, GroupLeaveRequestEvent.class))
-            .isEqualTo(groupLeaveRequestEvent);
+        assertThat(objectMapper.readValue(message.getPayload(), GroupLeaveRequestEvent.class))
+            .satisfies(forwardedRequest -> {
+                assertThat(forwardedRequest.getAggregateId()).isEqualTo(originalRequest.getAggregateId());
+                assertThat(forwardedRequest.getMemberId()).isEqualTo(originalRequest.getMemberId());
+                assertThat(forwardedRequest.getEventId()).isNotEqualTo(originalRequest.getEventId());
+                assertThat(forwardedRequest.getCreatedDate()).isAfter(originalRequest.getCreatedDate());
+                assertThat(forwardedRequest.getWebsocketId()).isEqualTo(USER_ID);
+            });
     }
 }
