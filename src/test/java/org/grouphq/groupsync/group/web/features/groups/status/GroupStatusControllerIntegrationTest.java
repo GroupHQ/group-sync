@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.rsocket.metadata.WellKnownMimeType;
+import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
 import org.grouphq.groupsync.GroupTestUtility;
@@ -70,14 +71,14 @@ class GroupStatusControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Test RSocket integration with group status update requests")
-    void testSocketIntegrationWithGroupStatusRequests() {
-        final var groupStatusRequestEvent =
+    @DisplayName("Only accepts group Id and new group status for group status update requests")
+    void testSocketIntegrationWithGroupStatusRequests() throws IOException {
+        final var originalRequest =
             GroupTestUtility.generateGroupStatusRequestEvent(1L, GroupStatus.DISBANDED);
 
         final Mono<Void> groupStatusRequest = requester
             .route("groups.status")
-            .data(groupStatusRequestEvent)
+            .data(originalRequest)
             .retrieveMono(Void.class);
 
         StepVerifier.create(groupStatusRequest)
@@ -88,7 +89,13 @@ class GroupStatusControllerIntegrationTest {
 
         assertThat(message).isNotNull();
         assertThat(
-            objectMapper.convertValue(groupStatusRequestEvent, GroupStatusRequestEvent.class))
-            .isEqualTo(groupStatusRequestEvent);
+            objectMapper.readValue(message.getPayload(), GroupStatusRequestEvent.class))
+            .satisfies(forwardedRequest -> {
+                assertThat(forwardedRequest.getAggregateId()).isEqualTo(1L);
+                assertThat(forwardedRequest.getNewStatus()).isEqualTo(GroupStatus.DISBANDED);
+                assertThat(forwardedRequest.getEventId()).isNotEqualTo(originalRequest.getEventId());
+                assertThat(forwardedRequest.getCreatedDate()).isAfter(originalRequest.getCreatedDate());
+                assertThat(forwardedRequest.getWebsocketId()).isEqualTo(USER_ID);
+            });
     }
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.rsocket.metadata.WellKnownMimeType;
+import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
 import org.grouphq.groupsync.GroupTestUtility;
@@ -69,13 +70,13 @@ class GroupJoinControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Test RSocket integration with group join requests")
-    void testSocketIntegrationWithGroupJoinRequests() {
-        final var groupJoinRequestEvent = GroupTestUtility.generateGroupJoinRequestEvent();
+    @DisplayName("Only accepts username and group Id for group join requests")
+    void testSocketIntegrationWithGroupJoinRequests() throws IOException {
+        final var originalRequest = GroupTestUtility.generateGroupJoinRequestEvent();
 
         final Mono<Void> groupJoinRequest = requester
             .route("groups.join")
-            .data(groupJoinRequestEvent)
+            .data(originalRequest)
             .retrieveMono(Void.class);
 
         StepVerifier.create(groupJoinRequest)
@@ -86,7 +87,13 @@ class GroupJoinControllerIntegrationTest {
 
         assertThat(message).isNotNull();
         assertThat(
-            objectMapper.convertValue(groupJoinRequestEvent, GroupJoinRequestEvent.class))
-            .isEqualTo(groupJoinRequestEvent);
+            objectMapper.readValue(message.getPayload(), GroupJoinRequestEvent.class))
+            .satisfies(forwardedRequest -> {
+                assertThat(forwardedRequest.getAggregateId()).isEqualTo(originalRequest.getAggregateId());
+                assertThat(forwardedRequest.getUsername()).isEqualTo(originalRequest.getUsername());
+                assertThat(forwardedRequest.getEventId()).isNotEqualTo(originalRequest.getEventId());
+                assertThat(forwardedRequest.getCreatedDate()).isAfter(originalRequest.getCreatedDate());
+                assertThat(forwardedRequest.getWebsocketId()).isEqualTo(USER_ID);
+            });
     }
 }

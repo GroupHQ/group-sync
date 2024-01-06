@@ -41,9 +41,10 @@ public class GroupCreateRequestEvent extends RequestEvent {
         String description,
         int maxGroupSize,
         String createdBy,
-        String websocketId
+        String websocketId,
+        Instant createdDate
     ) {
-        super(eventId, null, websocketId, Instant.now());
+        super(eventId, null, websocketId, createdDate);
         this.title = title;
         this.description = description;
         this.maxGroupSize = maxGroupSize;
