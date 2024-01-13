@@ -28,8 +28,13 @@ _This README is a work in progress. Some steps may be incomplete or missing_
       - [Requests a stream of user-specific updates](#Requests-a-stream-of-user-specific-updates)
       - [Requests to join a group](#Requests-to-join-a-group)
       - [Request to leave a group](#Request-to-leave-a-group)
+      - [Request to get user's current active member](#Request-to-get-users-current-active-member)
 - [Group Sync Architecture](#Group-Sync-Architecture)
   - [Component Diagram](#Component-Diagram)
+  - [Example of Event Flow: User Joining a Group](#Example-of-Event-Flow-User-Joining-a-Group)
+    - [1. Group Sync Publishes a Group Join Request to the Event Broker](#1-Group-Sync-Publishes-a-Group-Join-Request-to-the-Event-Broker)
+    - [2. Group Service Consumes this Request From the Broker And Publishes an OutboxEvent to the Broker](#2-Group-Service-Consumes-this-Request-From-the-Broker-And-Publishes-an-OutboxEvent-to-the-Broker)
+    - [3. Group Sync Consumes this OutboxEvent and Forwards the Event Info to all Connected Users](#3-Group-Sync-Consumes-this-OutboxEvent-and-Forwards-the-Event-Info-to-all-Connected-Users)
 
 ## Synopsis
 Group Sync manages RSocket connections for users to keep in-sync with the latest group changes using Spring Security 
