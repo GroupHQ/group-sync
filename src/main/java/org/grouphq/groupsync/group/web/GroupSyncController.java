@@ -1,8 +1,10 @@
 package org.grouphq.groupsync.group.web;
 
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
+import org.grouphq.groupsync.group.security.UserService;
 import org.grouphq.groupsync.group.sync.GroupFetchService;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
@@ -22,6 +24,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @RestController
 public class GroupSyncController {
+
+    private final UserService userService;
 
     private final GroupUpdateService groupUpdateService;
 
@@ -66,10 +70,9 @@ public class GroupSyncController {
     }
 
     private Mono<Boolean> monoIsUserEventOwner(OutboxEvent outboxEvent) {
-        return ReactiveSecurityContextHolder.getContext()
-            .map(SecurityContext::getAuthentication)
-            .flatMap(authentication -> {
-                final String username = authentication.getName();
+        return userService.getUserAuthentication()
+            .map(Principal::getName)
+            .flatMap(username -> {
                 final String eventOwner = outboxEvent.getWebsocketId();
                 return username.equals(eventOwner) ? Mono.just(true) : Mono.just(false);
             });

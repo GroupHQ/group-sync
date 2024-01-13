@@ -5,6 +5,7 @@ import java.util.UUID;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.grouphq.groupsync.groupservice.event.daos.Event;
 
 /**
@@ -15,6 +16,7 @@ import org.grouphq.groupsync.groupservice.event.daos.Event;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(force = true)
 @Data
+@ToString(callSuper = true)
 public abstract class RequestEvent extends Event {
 
     private final String websocketId;
