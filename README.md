@@ -358,7 +358,7 @@ The following container diagram shows Group Sync's place in the GroupHQ Software
 Group Sync communicates with three downstream services: Group Service and an event broker,
 while being called by an upstream service, Edge Service (i.e. GroupHQ's API Gateway).
 
-![structurizr-1-GroupHQ_Demo_Containers Alpha 0 1 1 1](https://github.com/GroupHQ/group-sync/assets/88041024/487a4202-35a8-485c-9593-d3b0244c2ad3)
+![GroupHQ_Demo_Containers_noObservability](https://github.com/GroupHQ/group-sync/assets/88041024/833937ea-59f4-4aee-a9d1-46996f2d9848)
 
 
 <hr>
