@@ -1,8 +1,8 @@
 package org.grouphq.groupsync.groupservice.domain.members;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Instant;
 import java.util.UUID;
+import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
 import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 
 /**
@@ -19,7 +19,6 @@ import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
  * @param lastModifiedBy Who last modified the group
  * @param version Unique number on group state (used by Spring Data for optimistic locking)
  */
-@JsonIgnoreProperties(value = {"@type"})
 public record Member(
 
     Long id,
@@ -40,7 +39,7 @@ public record Member(
     String lastModifiedBy,
 
     int version
-) {
+) implements EventDataModel {
     public static Member of(String username, Long groupId) {
         return new Member(null, UUID.randomUUID(), username, groupId, MemberStatus.ACTIVE, null,
             null, null, null, null, 0);

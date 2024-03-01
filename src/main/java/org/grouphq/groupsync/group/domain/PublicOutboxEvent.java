@@ -1,12 +1,12 @@
 package org.grouphq.groupsync.group.domain;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
+import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
@@ -24,7 +24,7 @@ import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
  */
 @Slf4j
 public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
-                                EventType eventType, String eventData,
+                                EventType eventType, EventDataModel eventData,
                                 EventStatus eventStatus, Instant createdDate) {
 
     private static final ObjectMapper OBJECT_MAPPER;
@@ -34,7 +34,7 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
         OBJECT_MAPPER.registerModule(new JavaTimeModule());
     }
 
-    public static PublicOutboxEvent convertOutboxEvent(OutboxEvent outboxEvent) {
+    public static PublicOutboxEvent convertOutboxEvent(OutboxEventJson outboxEvent) {
         return switch (outboxEvent.getEventType()) {
             case GROUP_CREATED -> convertGroupCreated(outboxEvent);
             case GROUP_UPDATED -> convertGroupStatusUpdated(outboxEvent);
@@ -44,42 +44,34 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
         };
     }
 
-    private static PublicOutboxEvent convertGroupCreated(OutboxEvent outboxEvent) {
+    private static PublicOutboxEvent convertGroupCreated(OutboxEventJson outboxEvent) {
         return convertDefault(outboxEvent);
     }
 
-    private static PublicOutboxEvent convertGroupStatusUpdated(OutboxEvent outboxEvent) {
+    private static PublicOutboxEvent convertGroupStatusUpdated(OutboxEventJson outboxEvent) {
         return convertDefault(outboxEvent);
     }
 
-    private static PublicOutboxEvent convertMemberJoined(OutboxEvent outboxEvent) {
+    private static PublicOutboxEvent convertMemberJoined(OutboxEventJson outboxEvent) {
         PublicOutboxEvent publicOutboxEvent;
 
-        try {
-            final Member member = OBJECT_MAPPER.readValue(outboxEvent.getEventData(), Member.class);
-            publicOutboxEvent = new PublicOutboxEvent(
-                outboxEvent.getAggregateId(),
-                outboxEvent.getAggregateType(),
-                outboxEvent.getEventType(),
-                OBJECT_MAPPER.writeValueAsString(Member.toPublicMember(member)),
-                outboxEvent.getEventStatus(),
-                outboxEvent.getCreatedDate()
-            );
-        } catch (JsonProcessingException exception) {
-            log.error("Error while trying to convert member joined outbox event to "
-                      + "public outbox event. Converting to default event. Event: {}",
-                outboxEvent, exception);
-            publicOutboxEvent = convertDefault(outboxEvent);
-        }
+        publicOutboxEvent = new PublicOutboxEvent(
+            outboxEvent.getAggregateId(),
+            outboxEvent.getAggregateType(),
+            outboxEvent.getEventType(),
+            Member.toPublicMember((Member) outboxEvent.getEventData()),
+            outboxEvent.getEventStatus(),
+            outboxEvent.getCreatedDate()
+        );
 
         return publicOutboxEvent;
     }
 
-    private static PublicOutboxEvent convertMemberLeft(OutboxEvent outboxEvent) {
+    private static PublicOutboxEvent convertMemberLeft(OutboxEventJson outboxEvent) {
         return convertDefault(outboxEvent);
     }
 
-    private static PublicOutboxEvent convertDefault(OutboxEvent outboxEvent) {
+    private static PublicOutboxEvent convertDefault(OutboxEventJson outboxEvent) {
         return new PublicOutboxEvent(
             outboxEvent.getAggregateId(),
             outboxEvent.getAggregateType(),
@@ -90,5 +82,14 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
         );
     }
 
-
+    public PublicOutboxEvent withNewEventData(EventDataModel eventDataModel) {
+        return new PublicOutboxEvent(
+            this.aggregateId(),
+            this.aggregateType(),
+            this.eventType,
+            eventDataModel,
+            this.eventStatus,
+            this.createdDate
+        );
+    }
 }

@@ -9,7 +9,7 @@ import org.grouphq.groupsync.group.sync.GroupFetchService;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
@@ -44,7 +44,7 @@ public class GroupSyncController {
     }
 
     @MessageMapping("groups.updates.user")
-    public Flux<OutboxEvent> getEventOwnerUpdates() {
+    public Flux<OutboxEventJson> getEventOwnerUpdates() {
         return groupUpdateService.eventOwnerUpdateStream()
             .flatMap(outboxEvent -> monoIsUserEventOwner(outboxEvent)
                 .flatMap(isOwner -> isOwner ? Mono.just(outboxEvent) : Mono.empty())
@@ -69,7 +69,7 @@ public class GroupSyncController {
             });
     }
 
-    private Mono<Boolean> monoIsUserEventOwner(OutboxEvent outboxEvent) {
+    private Mono<Boolean> monoIsUserEventOwner(OutboxEventJson outboxEvent) {
         return userService.getUserAuthentication()
             .map(Principal::getName)
             .flatMap(username -> {
