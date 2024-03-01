@@ -9,7 +9,6 @@ import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.members.MemberStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
@@ -355,48 +354,11 @@ public final class GroupTestUtility {
      * @return an OutboxEvent object with all details.
      */
     public static OutboxEvent generateOutboxEvent() {
-
-        return new OutboxEvent(
-            UUID.randomUUID(),
-            FAKER.number().randomNumber(12, true),
-            UUID.randomUUID().toString(),
-            AggregateType.GROUP,
-            EventType.GROUP_CREATED,
-            "{\"status\": \"ACTIVE\"}",
-            EventStatus.SUCCESSFUL,
-            Instant.now()
-        );
-    }
-
-    /**
-     * Overloaded method for {@link #generateOutboxEvent()}.
-     */
-    public static OutboxEvent generateOutboxEvent(String webSocketId, EventStatus eventStatus) {
-        final Faker faker = new Faker();
-
-        return new OutboxEvent(
-            UUID.randomUUID(),
-            faker.number().randomNumber(12, true),
-            webSocketId,
-            AggregateType.GROUP,
-            EventType.GROUP_CREATED,
-            "{\"status\": \"ACTIVE\"}",
-            eventStatus,
-            Instant.now()
-        );
-    }
-
-    /**
-     * Generates an outbox event.
-     *
-     * @return an OutboxEventJson object with all details.
-     */
-    public static OutboxEventJson generateOutboxEventJson() {
         EventDataModel eventData;
 
         eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
 
-        return new OutboxEventJson(
+        return new OutboxEvent(
             UUID.randomUUID(),
             FAKER.number().randomNumber(12, true),
             UUID.randomUUID().toString(),
@@ -409,14 +371,14 @@ public final class GroupTestUtility {
     }
 
     /**
-     * Overloaded method for {@link #generateOutboxEventJson()} ()}.
+     * Overloaded method for {@link #generateOutboxEvent()} ()}.
      */
-    public static OutboxEventJson generateOutboxEventJson(String webSocketId, EventStatus eventStatus) {
+    public static OutboxEvent generateOutboxEvent(String webSocketId, EventStatus eventStatus) {
         EventDataModel eventData;
 
         eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
 
-        return new OutboxEventJson(
+        return new OutboxEvent(
             UUID.randomUUID(),
             FAKER.number().randomNumber(12, true),
             webSocketId,

@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -32,7 +32,7 @@ class GroupUpdateServiceTest {
     @Test
     @DisplayName("Updates sink with successful events and emits them")
     void updatesSinkWithNewOutboxEventsAndEmitsThem() {
-        final OutboxEventJson outboxEvent = GroupTestUtility.generateOutboxEventJson();
+        final OutboxEvent outboxEvent = GroupTestUtility.generateOutboxEvent();
         final PublicOutboxEvent publicOutboxEvent =
             PublicOutboxEvent.convertOutboxEvent(outboxEvent);
 
@@ -53,8 +53,8 @@ class GroupUpdateServiceTest {
     @Test
     @DisplayName("Updates sink with failed events and emits them")
     void updatesSinkWithFailedOutboxEventsAndEmitsThem() {
-        final OutboxEventJson outboxEvent =
-                GroupTestUtility.generateOutboxEventJson("ID", EventStatus.FAILED);
+        final OutboxEvent outboxEvent =
+                GroupTestUtility.generateOutboxEvent("ID", EventStatus.FAILED);
 
         StepVerifier.create(groupUpdateService.eventOwnerUpdateStream())
             .then(() -> groupUpdateService.sendOutboxEventToEventOwner(outboxEvent))

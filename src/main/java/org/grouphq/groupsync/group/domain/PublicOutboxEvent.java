@@ -6,7 +6,7 @@ import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
@@ -34,7 +34,7 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
         OBJECT_MAPPER.registerModule(new JavaTimeModule());
     }
 
-    public static PublicOutboxEvent convertOutboxEvent(OutboxEventJson outboxEvent) {
+    public static PublicOutboxEvent convertOutboxEvent(OutboxEvent outboxEvent) {
         return switch (outboxEvent.getEventType()) {
             case GROUP_CREATED -> convertGroupCreated(outboxEvent);
             case GROUP_UPDATED -> convertGroupStatusUpdated(outboxEvent);
@@ -44,15 +44,15 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
         };
     }
 
-    private static PublicOutboxEvent convertGroupCreated(OutboxEventJson outboxEvent) {
+    private static PublicOutboxEvent convertGroupCreated(OutboxEvent outboxEvent) {
         return convertDefault(outboxEvent);
     }
 
-    private static PublicOutboxEvent convertGroupStatusUpdated(OutboxEventJson outboxEvent) {
+    private static PublicOutboxEvent convertGroupStatusUpdated(OutboxEvent outboxEvent) {
         return convertDefault(outboxEvent);
     }
 
-    private static PublicOutboxEvent convertMemberJoined(OutboxEventJson outboxEvent) {
+    private static PublicOutboxEvent convertMemberJoined(OutboxEvent outboxEvent) {
         PublicOutboxEvent publicOutboxEvent;
 
         publicOutboxEvent = new PublicOutboxEvent(
@@ -67,11 +67,11 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
         return publicOutboxEvent;
     }
 
-    private static PublicOutboxEvent convertMemberLeft(OutboxEventJson outboxEvent) {
+    private static PublicOutboxEvent convertMemberLeft(OutboxEvent outboxEvent) {
         return convertDefault(outboxEvent);
     }
 
-    private static PublicOutboxEvent convertDefault(OutboxEventJson outboxEvent) {
+    private static PublicOutboxEvent convertDefault(OutboxEvent outboxEvent) {
         return new PublicOutboxEvent(
             outboxEvent.getAggregateId(),
             outboxEvent.getAggregateType(),

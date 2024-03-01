@@ -3,7 +3,7 @@ package org.grouphq.groupsync.group.sync;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.BufferOverflowStrategy;
 import reactor.core.publisher.Flux;
@@ -18,7 +18,7 @@ public class GroupUpdateService {
 
     private final Sinks.Many<PublicOutboxEvent> publicUpdatesSink;
 
-    private final Sinks.Many<OutboxEventJson> userUpdatesSink;
+    private final Sinks.Many<OutboxEvent> userUpdatesSink;
 
     public GroupUpdateService() {
         publicUpdatesSink = Sinks.many().replay().limit(Duration.ofSeconds(5));
@@ -31,7 +31,7 @@ public class GroupUpdateService {
             .onBackpressureBuffer(100, BufferOverflowStrategy.DROP_OLDEST);
     }
 
-    public Flux<OutboxEventJson> eventOwnerUpdateStream() {
+    public Flux<OutboxEvent> eventOwnerUpdateStream() {
         return userUpdatesSink.asFlux()
             .onBackpressureBuffer(100, BufferOverflowStrategy.DROP_OLDEST);
     }
@@ -41,7 +41,7 @@ public class GroupUpdateService {
         emitResultLogger("PUBLIC", outboxEvent, result);
     }
 
-    public void sendOutboxEventToEventOwner(OutboxEventJson outboxEvent) {
+    public void sendOutboxEventToEventOwner(OutboxEvent outboxEvent) {
         final Sinks.EmitResult result = userUpdatesSink.tryEmitNext(outboxEvent);
         emitResultLogger(outboxEvent.getEventStatus().toString(), outboxEvent, result);
     }

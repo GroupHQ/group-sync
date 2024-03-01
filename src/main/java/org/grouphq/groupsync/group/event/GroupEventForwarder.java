@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
@@ -24,7 +24,7 @@ public class GroupEventForwarder {
     }
 
     @Bean
-    public Consumer<Flux<OutboxEventJson>> processedEvents() {
+    public Consumer<Flux<OutboxEvent>> processedEvents() {
         return outboxEvents ->
             outboxEvents.flatMap(this::forwardUpdate)
                 .doOnError(throwable -> log.error("Error while forwarding events. "
@@ -33,7 +33,7 @@ public class GroupEventForwarder {
                 .subscribe();
     }
 
-    private Mono<Void> forwardUpdate(OutboxEventJson outboxEvent) {
+    private Mono<Void> forwardUpdate(OutboxEvent outboxEvent) {
         switch (outboxEvent.getEventStatus()) {
             case SUCCESSFUL -> {
                 groupUpdateService.sendPublicOutboxEventToAll(
