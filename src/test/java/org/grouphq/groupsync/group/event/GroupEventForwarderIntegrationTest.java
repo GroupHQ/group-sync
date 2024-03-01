@@ -4,7 +4,7 @@ import java.time.Duration;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.web.GroupSyncController;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -40,9 +40,9 @@ class GroupEventForwarderIntegrationTest {
     @DisplayName("Forwards events to the outbox event update successful sink")
     void forwardsEventsToTheOutboxEventUpdateSink() {
         final PublicOutboxEvent[] publicEvents = {
-            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEvent()),
-            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEvent()),
-            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEvent())
+            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEventJson()),
+            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEventJson()),
+            PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEventJson())
         };
 
         final Flux<PublicOutboxEvent> groupUpdatesStream =
@@ -70,13 +70,13 @@ class GroupEventForwarderIntegrationTest {
     @WithMockUser(username = USER)
     @DisplayName("Forwards events to the outbox event update failed sink")
     void forwardsEventsToTheOutboxEventUpdateFailedSink() {
-        final OutboxEvent[] outboxEvents = {
-            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED)
+        final OutboxEventJson[] outboxEvents = {
+            GroupTestUtility.generateOutboxEventJson(USER, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEventJson(USER, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEventJson(USER, EventStatus.FAILED)
         };
 
-        final Flux<OutboxEvent> groupUpdatesStream =
+        final Flux<OutboxEventJson> groupUpdatesStream =
             groupSyncController.getEventOwnerUpdates()
             .doOnSubscribe(subscription -> {
                 inputDestination.send(new GenericMessage<>(outboxEvents[0]), eventDestination);

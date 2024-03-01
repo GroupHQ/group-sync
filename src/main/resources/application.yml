@@ -44,7 +44,8 @@ spring:
         max-interval: 50000
         max-attempts: 6
     function:
-      definition: processedEvents
+      definition: |
+        processedEvents;
     stream:
       bindings:
         groupCreateRequests-out-0:
@@ -60,7 +61,7 @@ spring:
           destination: group-leave-requests
           group: ${spring.application.name}
         processedEvents-in-0:
-          destination: group-event-results
+          destination: group-event-results-temp-group-89
           group: ${spring.application.name}
   rabbitmq:
     host: {$SPRING_RABBITMQ_HOST:localhost}

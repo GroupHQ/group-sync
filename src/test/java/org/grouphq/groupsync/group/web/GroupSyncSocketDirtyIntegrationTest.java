@@ -12,7 +12,7 @@ import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.sync.GroupFetchService;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,20 +85,20 @@ class GroupSyncSocketDirtyIntegrationTest {
     @Test
     @DisplayName("Test RSocket integration for streaming successful outbox events to all users")
     void testGetPublicOutboxEventUpdates(@Autowired InputDestination inputDestination) {
-        final OutboxEvent[] outboxEvents = {
-            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent("Some other user 1", EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent("Some other user 2", EventStatus.FAILED)
+        final OutboxEventJson[] outboxEvents = {
+            GroupTestUtility.generateOutboxEventJson(USER_ID, EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEventJson(USER_ID, EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEventJson("Some other user 1", EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEventJson(USER_ID, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEventJson(USER_ID, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEventJson("Some other user 2", EventStatus.FAILED)
         };
 
         final Flux<PublicOutboxEvent> groupUpdatesStream = requester
             .route("groups.updates.all")
             .retrieveFlux(PublicOutboxEvent.class)
             .doOnSubscribe(subscription -> {
-                for (final OutboxEvent outboxEvent : outboxEvents) {
+                for (final OutboxEventJson outboxEvent : outboxEvents) {
                     inputDestination.send(new GenericMessage<>(outboxEvent), eventDestination);
                 }
             });
@@ -125,20 +125,20 @@ class GroupSyncSocketDirtyIntegrationTest {
     @Test
     @DisplayName("Test RSocket integration for streaming outbox events belonging to a user")
     void testGetEventOwnerOutboxEventUpdates(@Autowired InputDestination inputDestination) {
-        final OutboxEvent[] outboxEvents = {
-            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent("Some other user", EventStatus.SUCCESSFUL),
-            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent("Some other user", EventStatus.FAILED)
+        final OutboxEventJson[] outboxEvents = {
+            GroupTestUtility.generateOutboxEventJson(USER_ID, EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEventJson(USER_ID, EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEventJson("Some other user", EventStatus.SUCCESSFUL),
+            GroupTestUtility.generateOutboxEventJson(USER_ID, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEventJson(USER_ID, EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEventJson("Some other user", EventStatus.FAILED)
         };
 
-        final Flux<OutboxEvent> groupUpdatesFailedStream = requester
+        final Flux<OutboxEventJson> groupUpdatesFailedStream = requester
             .route("groups.updates.user")
-            .retrieveFlux(OutboxEvent.class)
+            .retrieveFlux(OutboxEventJson.class)
             .doOnSubscribe(subscription -> {
-                for (final OutboxEvent outboxEvent : outboxEvents) {
+                for (final OutboxEventJson outboxEvent : outboxEvents) {
                     inputDestination.send(new GenericMessage<>(outboxEvent), eventDestination);
                 }
             });

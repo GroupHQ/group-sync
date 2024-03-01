@@ -7,7 +7,7 @@ import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.security.UserService;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -40,7 +40,7 @@ class GroupSyncControllerTest {
     @Test
     @DisplayName("Test streaming outbox events to all clients")
     void testGetOutboxEventUpdates() {
-        final OutboxEvent event = GroupTestUtility.generateOutboxEvent();
+        final OutboxEventJson event = GroupTestUtility.generateOutboxEventJson();
         final PublicOutboxEvent publicOutboxEvent = PublicOutboxEvent.convertOutboxEvent(event);
 
         // Mimic a stream of events, followed by an error that should be ignored
@@ -64,14 +64,14 @@ class GroupSyncControllerTest {
     @WithMockUser(username = "Banana")
     @DisplayName("Test streaming outbox events to the client who made the request")
     void testGetOutboxEventUpdatesFailed() {
-        final OutboxEvent[] events = {
-            GroupTestUtility.generateOutboxEvent("Apricot", EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent("Banana", EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent("Cherry", EventStatus.FAILED)
+        final OutboxEventJson[] events = {
+            GroupTestUtility.generateOutboxEventJson("Apricot", EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEventJson("Banana", EventStatus.FAILED),
+            GroupTestUtility.generateOutboxEventJson("Cherry", EventStatus.FAILED)
         };
 
         // Mimic a stream of events
-        final Sinks.Many<OutboxEvent> sink = Sinks.many().replay().limit(100);
+        final Sinks.Many<OutboxEventJson> sink = Sinks.many().replay().limit(100);
         sink.tryEmitNext(events[0]);
         sink.tryEmitNext(events[1]);
         sink.tryEmitNext(events[2]);
