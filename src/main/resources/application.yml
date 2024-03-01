@@ -61,7 +61,7 @@ spring:
           destination: group-leave-requests
           group: ${spring.application.name}
         processedEvents-in-0:
-          destination: group-event-results-temp-group-89
+          destination: group-event-results
           group: ${spring.application.name}
   rabbitmq:
     host: {$SPRING_RABBITMQ_HOST:localhost}

@@ -6,7 +6,7 @@ import static org.mockito.Mockito.verify;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
-import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEventJson;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -30,8 +30,8 @@ class GroupEventForwarderTest {
     @Test
     @DisplayName("Forwards successful events to the to all users sink and the event owner sink")
     void forwardsSuccessfulEventsToTheUpdatesSink() {
-        final OutboxEventJson outboxEvent =
-            GroupTestUtility.generateOutboxEventJson("ID", EventStatus.SUCCESSFUL);
+        final OutboxEvent outboxEvent =
+            GroupTestUtility.generateOutboxEvent("ID", EventStatus.SUCCESSFUL);
         final PublicOutboxEvent publicOutboxEvent =
             PublicOutboxEvent.convertOutboxEvent(outboxEvent);
 
@@ -47,8 +47,8 @@ class GroupEventForwarderTest {
     @Test
     @DisplayName("Forwards failed events to only the event owner sink")
     void forwardsFailedEventsToTheUpdatesFailedSink() {
-        final OutboxEventJson outboxEvent =
-            GroupTestUtility.generateOutboxEventJson("ID", EventStatus.FAILED);
+        final OutboxEvent outboxEvent =
+            GroupTestUtility.generateOutboxEvent("ID", EventStatus.FAILED);
 
         willDoNothing().given(groupUpdateService).sendOutboxEventToEventOwner(outboxEvent);
 
