@@ -7,6 +7,7 @@ import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.members.MemberStatus;
+import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
@@ -21,7 +22,7 @@ import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupStatusReq
  */
 public final class GroupTestUtility {
 
-    public static final Faker FAKER = new Faker();
+    private static final Faker FAKER = new Faker();
     static final String OWNER = "system";
 
     private GroupTestUtility() {}
@@ -353,6 +354,9 @@ public final class GroupTestUtility {
      * @return an OutboxEvent object with all details.
      */
     public static OutboxEvent generateOutboxEvent() {
+        EventDataModel eventData;
+
+        eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
 
         return new OutboxEvent(
             UUID.randomUUID(),
@@ -360,25 +364,27 @@ public final class GroupTestUtility {
             UUID.randomUUID().toString(),
             AggregateType.GROUP,
             EventType.GROUP_CREATED,
-            "{\"status\": \"ACTIVE\"}",
+            eventData,
             EventStatus.SUCCESSFUL,
             Instant.now()
         );
     }
 
     /**
-     * Overloaded method for {@link #generateOutboxEvent()}.
+     * Overloaded method for {@link #generateOutboxEvent()} ()}.
      */
     public static OutboxEvent generateOutboxEvent(String webSocketId, EventStatus eventStatus) {
-        final Faker faker = new Faker();
+        EventDataModel eventData;
+
+        eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
 
         return new OutboxEvent(
             UUID.randomUUID(),
-            faker.number().randomNumber(12, true),
+            FAKER.number().randomNumber(12, true),
             webSocketId,
             AggregateType.GROUP,
             EventType.GROUP_CREATED,
-            "{\"status\": \"ACTIVE\"}",
+            eventData,
             eventStatus,
             Instant.now()
         );

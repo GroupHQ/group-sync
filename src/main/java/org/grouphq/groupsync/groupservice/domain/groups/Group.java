@@ -2,6 +2,7 @@ package org.grouphq.groupsync.groupservice.domain.groups;
 
 import java.time.Instant;
 import java.util.List;
+import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
 import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 
 /**
@@ -32,7 +33,7 @@ public record Group(
         String lastModifiedBy,
         int version,
         List<PublicMember> members
-) {
+) implements EventDataModel {
     public static Group of(String title, String description,
                            int maxGroupSize, GroupStatus status) {
         return new Group(null, title, description, maxGroupSize, status,

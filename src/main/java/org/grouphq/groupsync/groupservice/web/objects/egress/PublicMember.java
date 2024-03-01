@@ -1,6 +1,7 @@
 package org.grouphq.groupsync.groupservice.web.objects.egress;
 
 import org.grouphq.groupsync.groupservice.domain.members.MemberStatus;
+import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
 
 /**
  * A data-access-object representing a member model containing
@@ -21,5 +22,5 @@ public record PublicMember(
     String joinedDate,
 
     String exitedDate
-) {
+) implements EventDataModel {
 }

@@ -7,5 +7,5 @@ package org.grouphq.groupsync.groupservice.domain.outbox;
  */
 public record ErrorData(
     String error
-) {
+) implements EventDataModel {
 }

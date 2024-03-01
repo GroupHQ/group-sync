@@ -52,7 +52,6 @@
             <property name="minimum" value="2" />
         </properties>
     </rule>
-    <rule ref="category/java/codestyle.xml/UnnecessaryAnnotationValueElement" />
     <rule ref="category/java/codestyle.xml/UnnecessaryCast" />
     <rule ref="category/java/codestyle.xml/UnnecessaryConstructor" />
     <rule ref="category/java/codestyle.xml/UnnecessaryFullyQualifiedName" />
@@ -85,5 +84,8 @@
 
 <!-- Tests require this limit to be arbitrarily high, rendering this rule useless.  -->
 <!--    <rule ref="category/java/codestyle.xml/TooManyStaticImports" />-->
+
+<!--  Doesn't work well with Jackson @JsonIgnoreProperties(value = {"@type"}) for records / classes -->
+<!--    <rule ref="category/java/codestyle.xml/UnnecessaryAnnotationValueElement" />-->
 
 </ruleset>

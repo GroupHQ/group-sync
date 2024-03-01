@@ -2,10 +2,11 @@ package org.grouphq.groupsync.groupservice.domain.members;
 
 import java.time.Instant;
 import java.util.UUID;
+import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
 import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 
 /**
- * A member model.
+ * A member model. The @type annotation is temporarily being ignored until GROUP-89 is resolved.
  *
  * @param id A unique ID belonging to a member
  * @param websocketId The user's websocket ID for the request
@@ -38,7 +39,7 @@ public record Member(
     String lastModifiedBy,
 
     int version
-) {
+) implements EventDataModel {
     public static Member of(String username, Long groupId) {
         return new Member(null, UUID.randomUUID(), username, groupId, MemberStatus.ACTIVE, null,
             null, null, null, null, 0);

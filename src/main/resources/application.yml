@@ -44,7 +44,8 @@ spring:
         max-interval: 50000
         max-attempts: 6
     function:
-      definition: processedEvents
+      definition: |
+        processedEvents;
     stream:
       bindings:
         groupCreateRequests-out-0:

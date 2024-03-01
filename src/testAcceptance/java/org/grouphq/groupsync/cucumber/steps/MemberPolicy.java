@@ -1,7 +1,5 @@
 package org.grouphq.groupsync.cucumber.steps;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -67,9 +65,6 @@ public class MemberPolicy {
     private String userId;
 
     private String httpBasicCredentialsEncoded;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Autowired
     private RSocketRequester.Builder builder;
@@ -217,7 +212,7 @@ public class MemberPolicy {
     }
 
     @And("I am a member of the group")
-    public void iAmAMemberOfTheGroup() throws JsonProcessingException {
+    public void iAmAMemberOfTheGroup() {
         requestEvent = GroupTestUtility.generateGroupJoinRequestEvent(userId, username, group.id());
 
         OUTBOX_EVENTS.clear();
@@ -235,7 +230,7 @@ public class MemberPolicy {
         await().atMost(5, TimeUnit.SECONDS).until(() -> !OUTBOX_EVENTS.isEmpty());
 
         event = OUTBOX_EVENTS.getLast();
-        member = objectMapper.readValue(event.getEventData(), Member.class);
+        member = (Member) event.getEventData();
 
         webTestClient
             .get()
