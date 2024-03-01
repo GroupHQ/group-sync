@@ -1,11 +1,12 @@
 package org.grouphq.groupsync.groupservice.domain.members;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Instant;
 import java.util.UUID;
 import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 
 /**
- * A member model.
+ * A member model. The @type annotation is temporarily being ignored until GROUP-89 is resolved.
  *
  * @param id A unique ID belonging to a member
  * @param websocketId The user's websocket ID for the request
@@ -18,6 +19,7 @@ import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
  * @param lastModifiedBy Who last modified the group
  * @param version Unique number on group state (used by Spring Data for optimistic locking)
  */
+@JsonIgnoreProperties(value = {"@type"})
 public record Member(
 
     Long id,

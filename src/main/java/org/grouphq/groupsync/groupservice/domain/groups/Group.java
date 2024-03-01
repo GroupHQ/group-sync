@@ -1,11 +1,12 @@
 package org.grouphq.groupsync.groupservice.domain.groups;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Instant;
 import java.util.List;
 import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 
 /**
- * A group model.
+ * A group model. The @type annotation is temporarily being ignored until GROUP-89 is resolved.
  *
  * @param id A unique ID belonging to a group
  * @param title Group's title or name
@@ -19,6 +20,7 @@ import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
  * @param lastModifiedBy Who last modified the group
  * @param version Unique number on group state (used by Spring Data for optimistic locking)
  */
+@JsonIgnoreProperties(value = {"@type"})
 public record Group(
         Long id,
         String title,
