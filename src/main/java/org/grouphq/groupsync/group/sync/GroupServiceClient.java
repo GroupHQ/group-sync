@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.config.ClientProperties;
 import org.grouphq.groupsync.group.domain.GroupServiceUnavailableException;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.springframework.stereotype.Service;
@@ -39,8 +40,27 @@ public class GroupServiceClient {
             .retryWhen(
                 Retry.backoff(clientProperties.getGroupsRetryAttempts(),
                     Duration.ofMillis(clientProperties.getGroupsRetryBackoffMilliseconds())))
+            .doOnError(throwable -> log.error("Group service failed on request to get groups", throwable))
             .onErrorMap(throwable -> new GroupServiceUnavailableException(
                 "Group service failed on request to get groups"));
+    }
+
+    public Flux<PublicOutboxEvent> getGroupsAsEvents() {
+        return webClient
+            .get()
+            .uri("/api/groups/events")
+            .retrieve()
+            .bodyToFlux(PublicOutboxEvent.class)
+            .timeout(Duration.ofMillis(
+                    clientProperties.getGroupsTimeoutMilliseconds()),
+                Flux.error(new GroupServiceUnavailableException(
+                    "Group service timed out on request to get groups")))
+            .retryWhen(
+                Retry.backoff(clientProperties.getGroupsRetryAttempts(),
+                    Duration.ofMillis(clientProperties.getGroupsRetryBackoffMilliseconds())))
+            .doOnError(throwable -> log.error("Group service failed on request to get groups as events", throwable))
+            .onErrorMap(throwable -> new GroupServiceUnavailableException(
+                "Group service failed on request to get groups as events"));
     }
 
     public Mono<Member> getMyMember(String websocketId) {

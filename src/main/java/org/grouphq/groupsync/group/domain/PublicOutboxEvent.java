@@ -3,6 +3,7 @@ package org.grouphq.groupsync.group.domain;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
@@ -23,7 +24,7 @@ import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
  * @param createdDate The date the event was created
  */
 @Slf4j
-public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
+public record PublicOutboxEvent(UUID eventId, Long aggregateId, AggregateType aggregateType,
                                 EventType eventType, EventDataModel eventData,
                                 EventStatus eventStatus, Instant createdDate) {
 
@@ -56,6 +57,7 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
         PublicOutboxEvent publicOutboxEvent;
 
         publicOutboxEvent = new PublicOutboxEvent(
+            outboxEvent.getEventId(),
             outboxEvent.getAggregateId(),
             outboxEvent.getAggregateType(),
             outboxEvent.getEventType(),
@@ -68,11 +70,24 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
     }
 
     private static PublicOutboxEvent convertMemberLeft(OutboxEvent outboxEvent) {
-        return convertDefault(outboxEvent);
+        PublicOutboxEvent publicOutboxEvent;
+
+        publicOutboxEvent = new PublicOutboxEvent(
+            outboxEvent.getEventId(),
+            outboxEvent.getAggregateId(),
+            outboxEvent.getAggregateType(),
+            outboxEvent.getEventType(),
+            Member.toPublicMember((Member) outboxEvent.getEventData()),
+            outboxEvent.getEventStatus(),
+            outboxEvent.getCreatedDate()
+        );
+
+        return publicOutboxEvent;
     }
 
     private static PublicOutboxEvent convertDefault(OutboxEvent outboxEvent) {
         return new PublicOutboxEvent(
+            outboxEvent.getEventId(),
             outboxEvent.getAggregateId(),
             outboxEvent.getAggregateType(),
             outboxEvent.getEventType(),
@@ -84,6 +99,7 @@ public record PublicOutboxEvent(Long aggregateId, AggregateType aggregateType,
 
     public PublicOutboxEvent withNewEventData(EventDataModel eventDataModel) {
         return new PublicOutboxEvent(
+            this.eventId,
             this.aggregateId(),
             this.aggregateType(),
             this.eventType,

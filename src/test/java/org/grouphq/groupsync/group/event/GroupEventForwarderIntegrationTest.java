@@ -1,8 +1,11 @@
 package org.grouphq.groupsync.group.event;
 
+import static org.mockito.BDDMockito.given;
+
 import java.time.Duration;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
+import org.grouphq.groupsync.group.sync.state.GroupInitialStateService;
 import org.grouphq.groupsync.group.web.GroupSyncController;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.InputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.context.annotation.Import;
@@ -27,6 +31,9 @@ class GroupEventForwarderIntegrationTest {
 
     @Autowired
     private InputDestination inputDestination;
+
+    @SpyBean
+    private GroupInitialStateService groupInitialStateService;
 
     @Autowired
     private GroupSyncController groupSyncController;
@@ -44,6 +51,8 @@ class GroupEventForwarderIntegrationTest {
             PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEvent()),
             PublicOutboxEvent.convertOutboxEvent(GroupTestUtility.generateOutboxEvent())
         };
+
+        given(groupInitialStateService.requestCurrentEvents()).willReturn(Flux.empty());
 
         final Flux<PublicOutboxEvent> groupUpdatesStream =
             groupSyncController.getPublicUpdates()

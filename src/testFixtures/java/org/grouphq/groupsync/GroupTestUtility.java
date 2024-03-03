@@ -2,6 +2,8 @@ package org.grouphq.groupsync;
 
 import com.github.javafaker.Faker;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
@@ -16,6 +18,7 @@ import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupCreateReq
 import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupJoinRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupLeaveRequestEvent;
 import org.grouphq.groupsync.groupservice.event.daos.requestevent.GroupStatusRequestEvent;
+import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 
 /**
  * Utility class for common functionality needed by multiple tests.
@@ -41,7 +44,7 @@ public final class GroupTestUtility {
     public static Group generateFullGroupDetails(GroupStatus status) {
         final Faker faker = new Faker();
 
-        // Generate capacities and ensure space for at least 50 members to join
+        // Generate capacities and ensure space for at least 100 members to join
         final int maxCapacity = faker.number().numberBetween(100, 150);
 
         return new Group(
@@ -56,7 +59,7 @@ public final class GroupTestUtility {
             OWNER,
             OWNER,
             0,
-            null
+            Set.of()
         );
     }
 
@@ -84,7 +87,7 @@ public final class GroupTestUtility {
             OWNER,
             OWNER,
             0,
-            null
+            Set.of()
         );
     }
 
@@ -112,7 +115,43 @@ public final class GroupTestUtility {
             OWNER,
             OWNER,
             0,
-            null
+            Set.of()
+        );
+    }
+
+    /**
+     * Generates a group with members.
+     *
+     * @return A group object with all details.
+     */
+    public static Group generateFullGroupDetailsWithMembers(GroupStatus status) {
+        final Faker faker = new Faker();
+
+        final Long groupId = faker.number().randomNumber(12, true);
+
+        // Generate capacities and ensure space for at least 10 members to join
+        final int maxCapacity = faker.number().numberBetween(10, 25);
+
+        final Set<PublicMember> members = new HashSet<>();
+        for (int i = 0; i < maxCapacity / 2; i++) {
+            final Member member = generateFullMemberDetails(faker.name().username(), groupId);
+            final PublicMember publicMember = Member.toPublicMember(member);
+            members.add(publicMember);
+        }
+
+        return new Group(
+            faker.number().randomNumber(12, true),
+            faker.lorem().sentence(),
+            faker.lorem().sentence(20),
+            maxCapacity,
+            status,
+            Instant.now(),
+            Instant.now(),
+            Instant.now(),
+            OWNER,
+            OWNER,
+            0,
+            members
         );
     }
 
@@ -157,7 +196,7 @@ public final class GroupTestUtility {
         return new Member(
             FAKER.number().randomNumber(12, true),
             UUID.randomUUID(),
-            username,
+            username == null ? FAKER.name().firstName() : username,
             groupId,
             MemberStatus.ACTIVE,
             null,
@@ -354,9 +393,7 @@ public final class GroupTestUtility {
      * @return an OutboxEvent object with all details.
      */
     public static OutboxEvent generateOutboxEvent() {
-        EventDataModel eventData;
-
-        eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
+        final EventDataModel eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
 
         return new OutboxEvent(
             UUID.randomUUID(),
@@ -371,12 +408,33 @@ public final class GroupTestUtility {
     }
 
     /**
+     * Generates an outbox event with the given EventDataModel.
+     *
+     * @param eventData the event data to use
+     * @param eventType the event type to use
+     *
+     * @return an OutboxEvent object with all details.
+     */
+    public static OutboxEvent generateOutboxEvent(
+        Long aggregateId, EventDataModel eventData, EventType eventType) {
+
+        return new OutboxEvent(
+            UUID.randomUUID(),
+            aggregateId,
+            UUID.randomUUID().toString(),
+            AggregateType.GROUP,
+            eventType,
+            eventData,
+            EventStatus.SUCCESSFUL,
+            Instant.now()
+        );
+    }
+
+    /**
      * Overloaded method for {@link #generateOutboxEvent()} ()}.
      */
     public static OutboxEvent generateOutboxEvent(String webSocketId, EventStatus eventStatus) {
-        EventDataModel eventData;
-
-        eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
+        final EventDataModel eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
 
         return new OutboxEvent(
             UUID.randomUUID(),

@@ -1,6 +1,7 @@
 package org.grouphq.groupsync.group.sync;
 
 import lombok.RequiredArgsConstructor;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,10 @@ public class GroupFetchService {
 
     public Flux<Group> getGroups() {
         return groupServiceClient.getGroups();
+    }
+
+    public Flux<PublicOutboxEvent> getGroupsAsEvents() {
+        return groupServiceClient.getGroupsAsEvents();
     }
 
     public Mono<Member> getMyMember(String websocketId) {

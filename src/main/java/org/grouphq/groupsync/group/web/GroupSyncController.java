@@ -7,6 +7,7 @@ import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.security.UserService;
 import org.grouphq.groupsync.group.sync.GroupFetchService;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
+import org.grouphq.groupsync.group.sync.state.GroupInitialStateService;
 import org.grouphq.groupsync.groupservice.domain.exceptions.InternalServerError;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
@@ -27,14 +28,21 @@ public class GroupSyncController {
 
     private final UserService userService;
 
+    private final GroupInitialStateService groupInitialStateService;
+
     private final GroupUpdateService groupUpdateService;
 
     private final GroupFetchService groupFetchService;
 
+    @MessageMapping("groups.ping")
+    public Mono<Boolean> ping() {
+        return Mono.just(true);
+    }
+
     @MessageMapping("groups.updates.all")
     public Flux<PublicOutboxEvent> getPublicUpdates() {
         log.info("Subscribing connection to public updates stream.");
-        return groupUpdateService.publicUpdatesStream()
+        return groupInitialStateService.requestCurrentEvents().concatWith(groupUpdateService.publicUpdatesStream())
             .doOnNext(outboxEvent -> log.info("Sending public outbox event: {}", outboxEvent))
             .doOnCancel(() -> log.info("User cancelled streaming outbox events."))
             .doOnComplete(() -> log.info("Stopped streaming outbox events."))

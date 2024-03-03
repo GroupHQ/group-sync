@@ -2,6 +2,7 @@ package org.grouphq.groupsync.groupservice.domain.outbox;
 
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
  */
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor
+@Builder
 @Data
 public class OutboxEvent {
     private final UUID eventId;

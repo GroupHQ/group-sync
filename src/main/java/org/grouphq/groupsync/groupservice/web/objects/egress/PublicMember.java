@@ -1,5 +1,10 @@
 package org.grouphq.groupsync.groupservice.web.objects.egress;
 
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.jackson.Jacksonized;
 import org.grouphq.groupsync.groupservice.domain.members.MemberStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
 
@@ -13,14 +18,17 @@ import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
  * @param joinedDate Time user joined the group. Same time as createdDate
  * @param exitedDate Time user left the group. Initially null.
  */
-public record PublicMember(
-    Long id,
-    String username,
-    Long groupId,
-    MemberStatus memberStatus,
-
-    String joinedDate,
-
-    String exitedDate
-) implements EventDataModel {
+@Getter
+@Builder
+@Jacksonized
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(callSuper = true)
+public class PublicMember implements EventDataModel {
+    @EqualsAndHashCode.Include
+    private final Long id;
+    private final String username;
+    private final Long groupId;
+    private final MemberStatus memberStatus;
+    private final String joinedDate;
+    private final String exitedDate;
 }

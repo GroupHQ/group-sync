@@ -52,10 +52,13 @@ public record Member(
     }
 
     public static PublicMember toPublicMember(Member member) {
-        return new PublicMember(
-            member.id(), member.username(), member.groupId(),
-            member.memberStatus(), member.createdDate().toString(),
-            member.exitedDate() == null ? null : member.exitedDate().toString()
-        );
+        return PublicMember.builder()
+            .id(member.id())
+            .username(member.username())
+            .groupId(member.groupId())
+            .memberStatus(member.memberStatus())
+            .joinedDate(member.createdDate().toString())
+            .exitedDate(member.exitedDate() == null ? null : member.exitedDate().toString())
+            .build();
     }
 }

@@ -42,7 +42,6 @@ class GroupStatusControllerTest {
 
     private static final String INTERNAL_SERVER_ERROR_SUFFIX = """
              because the server has encountered an unexpected error.
-            Rest assured, this will be investigated.
             """;
     private static final String DUMMY_MESSAGE = "This message should NOT be returned to the user!";
 
