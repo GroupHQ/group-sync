@@ -111,7 +111,6 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-aop"
 
     implementation 'io.projectreactor:reactor-tools'
-    implementation 'com.github.javafaker:javafaker:1.0.2'
 //    implementation "io.sentry:sentry-spring-boot-starter-jakarta:6.28.0"
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -138,7 +137,7 @@ dependencies {
 
 
     // Test Fixtures Dependencies
-    testFixturesImplementation 'com.github.javafaker:javafaker:1.0.2'
+    testFixturesImplementation 'net.datafaker:datafaker:2.1.0'
 
     // Acceptance Test Dependencies
     testAcceptanceImplementation 'org.awaitility:awaitility:4.2.0'
@@ -147,7 +146,7 @@ dependencies {
     testAcceptanceImplementation 'org.springframework.security:spring-security-rsocket'
     testAcceptanceImplementation 'org.springframework.boot:spring-boot-starter-rsocket'
     testAcceptanceImplementation testFixtures(project(':'))
-    testAcceptanceImplementation 'com.github.javafaker:javafaker:1.0.2'
+    testAcceptanceImplementation 'net.datafaker:datafaker:2.1.0'
 
     // Dependencies needed for Cucumber
     testAcceptanceImplementation(platform("org.junit:junit-bom:5.10.0"))

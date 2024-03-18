@@ -1,8 +1,8 @@
 package org.grouphq.groupsync;
 
-import com.github.javafaker.Faker;
 import java.time.Instant;
 import java.util.UUID;
+import net.datafaker.Faker;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
