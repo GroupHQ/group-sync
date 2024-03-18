@@ -5,6 +5,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Stream;
 import org.grouphq.groupsync.GroupTestUtility;
@@ -25,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
 
@@ -58,7 +61,6 @@ class GroupInitialStateServiceTest {
     @DisplayName("When a request is made for the current events, then transition to the loading state")
     void whenRequestIsMadeForCurrentStateThenTransitionToLoadingState() {
         given(groupFetchService.getGroupsAsEvents()).willReturn(Flux.never());
-        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(5000L);
 
         StepVerifier.create(groupInitialStateService.requestCurrentEvents())
             .then(() -> assertThat(groupInitialStateService.getState()).isExactlyInstanceOf(LoadingState.class))
@@ -77,7 +79,6 @@ class GroupInitialStateServiceTest {
 
         given(groupFetchService.getGroupsAsEvents()).willReturn(eventFlux);
         given(groupUpdateService.publicUpdatesStream()).willReturn(Flux.never());
-        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(5000L);
 
         StepVerifier.create(groupInitialStateService.requestCurrentEvents())
             .expectNextCount(5)
@@ -97,7 +98,6 @@ class GroupInitialStateServiceTest {
 
         given(groupFetchService.getGroupsAsEvents()).willReturn(eventFlux);
         given(groupUpdateService.publicUpdatesStream()).willReturn(Flux.never());
-        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(5000L);
 
         StepVerifier.create(groupInitialStateService.requestCurrentEvents())
             .expectNextCount(5)
@@ -136,17 +136,23 @@ class GroupInitialStateServiceTest {
         final PublicOutboxEvent publicOutboxEventDisbanded =
             PublicOutboxEvent.convertOutboxEvent(outboxEventDisbanded);
 
-        // change this to a sink
         final Sinks.Many<PublicOutboxEvent> updateSink = Sinks.many().replay().all();
         final Flux<PublicOutboxEvent> eventFluxDisbanded = updateSink.asFlux();
 
         given(groupUpdateService.publicUpdatesStream()).willReturn(eventFluxDisbanded);
 
-        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(5000L);
-
+        /*
+         TODO: Non-deterministic and subject to flakiness. Need to find a better way to test this.
+         The issue here is that the sink emission may not cause the current state of events to update
+         before requesting them again if the update takes too long.
+         If you remove the delayElement call, this test will likely pass when run in isolation and with
+         other tests in this file. But when running all unit tests, it usually fails.
+         */
         StepVerifier.create(groupInitialStateService.requestCurrentEvents()
-                .doOnComplete(() -> updateSink.tryEmitNext(publicOutboxEventDisbanded))
-                .thenMany(groupInitialStateService.requestCurrentEvents()))
+                .then(Mono.fromRunnable(() -> updateSink.tryEmitNext(publicOutboxEventDisbanded)))
+                .delayElement(Duration.of(2500, ChronoUnit.MILLIS))
+                .thenMany(groupInitialStateService.requestCurrentEvents())
+            )
             .verifyComplete();
     }
 
@@ -155,7 +161,6 @@ class GroupInitialStateServiceTest {
     void whenRetriesExhaustedInLoadingStateThenTransitionToDormantState() {
         given(groupFetchService.getGroupsAsEvents())
             .willReturn(Flux.error(new RuntimeException("Failed to fetch groups")));
-        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(5000L);
         given(clientProperties.getGroupsRetryAttempts()).willReturn(3L);
         given(clientProperties.getGroupsRetryBackoffMilliseconds()).willReturn(10L);
 

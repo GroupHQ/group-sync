@@ -14,10 +14,11 @@ import java.util.stream.Collectors;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.config.ClientProperties;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
-import org.grouphq.groupsync.group.sync.GroupFetchService;
+import org.grouphq.groupsync.group.sync.GroupServiceClient;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
+import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,7 +51,7 @@ class GroupSyncSocketIntegrationTest {
     private ClientProperties clientProperties;
 
     @MockBean
-    private GroupFetchService groupFetchService;
+    private GroupServiceClient groupServiceClient;
 
     private static RSocketRequester requester;
 
@@ -99,7 +100,7 @@ class GroupSyncSocketIntegrationTest {
     @Test
     @DisplayName("Test RSocket integration for streaming successful outbox events to all users")
     void testGetPublicOutboxEventUpdates(@Autowired InputDestination inputDestination) {
-        given(groupFetchService.getGroupsAsEvents()).willReturn(Flux.empty());
+        given(groupServiceClient.getGroupsAsEvents()).willReturn(Flux.empty());
 
         final List<OutboxEvent> outboxEvents = List.of(
             GroupTestUtility.generateOutboxEvent(USER_ID, EventStatus.SUCCESSFUL),
@@ -142,22 +143,7 @@ class GroupSyncSocketIntegrationTest {
                 assertThat(received).doesNotContainAnyElementsOf(failedPublicEvents);
             })
             .thenCancel()
-            .verify();
-    }
-
-    @Test
-    @DisplayName("Times out and retries appropriately when group service does not respond with groups")
-    void whenGroupServiceTimesOutOnGroupsFetchThenReturnException() {
-        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(1L);
-        given(groupFetchService.getGroupsAsEvents()).willReturn(Flux.never());
-
-        final Flux<PublicOutboxEvent> groupUpdatesStream = requester
-            .route("groups.updates.all")
-            .retrieveFlux(PublicOutboxEvent.class);
-
-        StepVerifier.create(groupUpdatesStream)
-            .expectError()
-            .verify(Duration.ofSeconds(5));
+            .verify(Duration.ofSeconds(15));
     }
 
     @Test
@@ -201,21 +187,29 @@ class GroupSyncSocketIntegrationTest {
                 assertThat(received).doesNotContainAnyElementsOf(nonUserEvents);
             })
             .thenCancel()
-            .verify();
+            .verify(Duration.ofSeconds(5));
     }
 
     @Test
     @DisplayName("Test RSocket integration for getting a user's member details")
     void testGetUsersMemberDetails() {
-        final Member member = Member.of(UUID.fromString(USER_ID), "user", 1L);
-        given(groupFetchService.getMyMember(member.websocketId().toString())).willReturn(Mono.just(member));
+        final Member member =
+            GroupTestUtility.generateFullMemberDetails(UUID.fromString(USER_ID), "user", 1L);
+        given(groupServiceClient.getMyMember(member.websocketId().toString())).willReturn(Mono.just(member));
 
-        final Mono<Member> memberDetails = requester
+        final Mono<PublicMember> memberDetails = requester
             .route("groups.user.member")
-            .retrieveMono(Member.class);
+            .retrieveMono(PublicMember.class);
 
         StepVerifier.create(memberDetails)
-            .expectNext(member)
+            .assertNext(memberReceived -> assertThat(memberReceived).satisfies(publicMember -> {
+                assertThat(publicMember).isExactlyInstanceOf(PublicMember.class);
+                assertThat(publicMember.getId()).isEqualTo(member.id());
+                assertThat(publicMember.getUsername()).isEqualTo(member.username());
+                assertThat(publicMember.getGroupId()).isEqualTo(member.groupId());
+                assertThat(publicMember.getJoinedDate()).isEqualTo(member.createdDate().toString());
+                assertThat(publicMember.getMemberStatus()).isEqualTo(member.memberStatus());
+            }))
             .verifyComplete();
     }
 }

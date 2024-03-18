@@ -28,7 +28,7 @@ public class GroupEventForwarder {
         return outboxEvents ->
             outboxEvents.flatMap(this::forwardUpdate)
                 .doOnError(throwable -> log.error("Error while forwarding events. "
-                                                  + "Attempting to resume.", throwable))
+                                                  + "Attempting to resume. Error: {}", throwable.getMessage()))
                 .onErrorResume(throwable -> Flux.empty())
                 .subscribe();
     }
@@ -38,9 +38,10 @@ public class GroupEventForwarder {
             case SUCCESSFUL -> {
                 groupUpdateService.sendPublicOutboxEventToAll(
                     PublicOutboxEvent.convertOutboxEvent(outboxEvent));
-                groupUpdateService.sendOutboxEventToEventOwner(outboxEvent);
+                groupUpdateService.sendOutboxEventToEventOwner(OutboxEvent.convertEventDataToPublic(outboxEvent));
             }
-            case FAILED -> groupUpdateService.sendOutboxEventToEventOwner(outboxEvent);
+            case FAILED -> groupUpdateService
+                .sendOutboxEventToEventOwner(OutboxEvent.convertEventDataToPublic(outboxEvent));
             default -> log.error("Unknown event status: {}", outboxEvent.getEventStatus());
         }
 

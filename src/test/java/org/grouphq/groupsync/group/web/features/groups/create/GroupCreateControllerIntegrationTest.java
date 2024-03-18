@@ -95,7 +95,7 @@ class GroupCreateControllerIntegrationTest {
                 assertThat(forwardedRequest.getMaxGroupSize())
                     .isEqualTo(originalRequest.getMaxGroupSize());
                 assertThat(forwardedRequest.getEventId())
-                    .isNotEqualTo(originalRequest.getEventId());
+                    .isEqualTo(originalRequest.getEventId());
                 assertThat(forwardedRequest.getCreatedDate()).isAfter(originalRequest.getCreatedDate());
                 assertThat(forwardedRequest.getCreatedBy())
                     .isEqualTo(USER_ID);

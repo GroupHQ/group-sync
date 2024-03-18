@@ -7,11 +7,13 @@ import java.util.UUID;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
 import org.grouphq.groupsync.groupservice.web.objects.egress.PublicMember;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import reactor.test.StepVerifier;
 
 @Tag("UnitTest")
 class PublicOutboxEventTest {
@@ -50,5 +52,21 @@ class PublicOutboxEventTest {
         final PublicOutboxEvent publicOutboxEvent = PublicOutboxEvent.convertOutboxEvent(outboxEvent);
 
         assertThat(publicOutboxEvent.eventData()).isExactlyInstanceOf(PublicMember.class);
+    }
+
+    @Test
+    @DisplayName("Returns an empty event")
+    void returnEmptyEvent() {
+        StepVerifier.create(PublicOutboxEvent.getEmptyEvent())
+            .assertNext(event -> assertThat(event).satisfies(publicOutboxEvent -> {
+                assertThat(publicOutboxEvent.eventId()).isNotNull();
+                assertThat(publicOutboxEvent.aggregateId()).isEqualTo(0L);
+                assertThat(publicOutboxEvent.aggregateType()).isEqualTo(AggregateType.NONE);
+                assertThat(publicOutboxEvent.eventType()).isEqualTo(EventType.NOTHING);
+                assertThat(publicOutboxEvent.eventData()).isNull();
+                assertThat(publicOutboxEvent.eventStatus()).isEqualTo(EventStatus.SUCCESSFUL);
+                assertThat(publicOutboxEvent.createdDate()).isNotNull();
+            }))
+            .verifyComplete();
     }
 }

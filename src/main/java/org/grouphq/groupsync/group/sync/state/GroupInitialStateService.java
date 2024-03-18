@@ -53,7 +53,8 @@ public class GroupInitialStateService {
 
     public Flux<PublicOutboxEvent> requestCurrentEvents() {
         return state.onRequest()
-            .thenMany(buildState());
+            .thenMany(buildState())
+            .doOnError(throwable -> log.error("Error initializing group state: {}", throwable.getMessage()));
     }
 
     private Flux<PublicOutboxEvent> buildState() {
@@ -78,9 +79,11 @@ public class GroupInitialStateService {
                     Retry.backoff(clientProperties.getGroupsRetryAttempts(),
                             Duration.ofMillis(clientProperties.getGroupsRetryBackoffMilliseconds()))
                     .maxBackoff(Duration.ofSeconds(10))
-                    .doBeforeRetry(retrySignal -> log.warn("Retrying due to error", retrySignal.failure())))
+                    .doBeforeRetry(retrySignal -> log.warn("Retrying due to error: {}",
+                        retrySignal.failure().getMessage())))
                 .doOnComplete(this::createUpdateSubscription)
-                .doOnError(error -> log.error("Error getting initial state of events", error))
+                .doOnComplete(() -> log.info("Successfully initialized group state"))
+                .doOnError(error -> log.error("Error getting initial state of events: {}", error.getMessage()))
                 .then(Mono.empty())
         );
     }
@@ -110,7 +113,8 @@ public class GroupInitialStateService {
     protected Flux<PublicOutboxEvent> keepGroupsAndMembersUpToDate() {
         return groupUpdateService.publicUpdatesStream()
             .flatMap(groupStateService::handleEventUpdate)
-            .doOnError(throwable -> log.error("Error keeping groups and members up to date", throwable));
+            .doOnError(throwable -> log.error("Error keeping groups and members up to date. Error: {}",
+                throwable.getMessage()));
     }
 
 

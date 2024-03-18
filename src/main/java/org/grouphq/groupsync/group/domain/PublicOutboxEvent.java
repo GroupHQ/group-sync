@@ -11,6 +11,7 @@ import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
+import reactor.core.publisher.Mono;
 
 /**
  * A data-access-object representing an outbox event containing
@@ -107,5 +108,17 @@ public record PublicOutboxEvent(UUID eventId, Long aggregateId, AggregateType ag
             this.eventStatus,
             this.createdDate
         );
+    }
+
+    public static Mono<PublicOutboxEvent> getEmptyEvent() {
+        return Mono.just(new PublicOutboxEvent(
+            UUID.randomUUID(),
+            0L,
+            AggregateType.NONE,
+            EventType.NOTHING,
+            null,
+            EventStatus.SUCCESSFUL,
+            Instant.now()
+        )).share();
     }
 }

@@ -33,7 +33,6 @@ class DormantStateTest {
     @DisplayName("Should return the same hot source when called multiple times")
     void shouldReturnTheSameHotSourceWhenCalledMultipleTimes() {
         given(groupInitialStateService.initializeGroupState()).willReturn(Mono.empty());
-        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(1000L);
 
         final Mono<Void> firstRequest = dormantState.onRequest();
         final Mono<Void> secondRequest = dormantState.onRequest();

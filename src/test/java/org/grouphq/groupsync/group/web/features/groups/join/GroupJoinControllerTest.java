@@ -52,7 +52,7 @@ class GroupJoinControllerTest {
         given(groupEventPublisher.publishGroupJoinRequest(
             argThat(publishedRequest -> originalRequest.getAggregateId().equals(publishedRequest.getAggregateId())
                 && originalRequest.getUsername().equals(publishedRequest.getUsername())
-                && !originalRequest.getEventId().equals(publishedRequest.getEventId())
+                && originalRequest.getEventId().equals(publishedRequest.getEventId())
                 && !originalRequest.getCreatedDate().equals(publishedRequest.getCreatedDate())
                 && !originalRequest.getWebsocketId().equals(publishedRequest.getWebsocketId())
             ))

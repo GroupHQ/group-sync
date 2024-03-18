@@ -2,7 +2,6 @@ package org.grouphq.groupsync.group.web.features;
 
 import java.security.Principal;
 import java.time.Instant;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
@@ -32,7 +31,7 @@ public class GroupStatusController {
         return createUpdateStatusRequestWithCurrentAuthorization(groupStatusRequestEvent)
             .flatMap(eventWithAuth -> groupEventPublisher.publishGroupUpdateStatusRequest(eventWithAuth)
                 .doOnSuccess(unused -> log.debug("Sent update group status request: {}", eventWithAuth))
-                .doOnError(throwable -> log.error("Error while updating group status.", throwable))
+                .doOnError(throwable -> log.error("Error while updating group status: {}", throwable.getMessage()))
                 .onErrorMap(unusedThrowable -> new InternalServerError("Cannot update group status"))
             );
     }
@@ -42,7 +41,7 @@ public class GroupStatusController {
         return userService.getUserAuthentication()
             .map(Principal::getName)
             .flatMap(websocketId -> Mono.just(new GroupStatusRequestEvent(
-                UUID.randomUUID(),
+                groupStatusRequestEvent.getEventId(),
                 groupStatusRequestEvent.getAggregateId(),
                 groupStatusRequestEvent.getNewStatus(),
                 websocketId,

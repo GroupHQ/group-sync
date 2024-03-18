@@ -40,7 +40,8 @@ public class GroupServiceClient {
             .retryWhen(
                 Retry.backoff(clientProperties.getGroupsRetryAttempts(),
                     Duration.ofMillis(clientProperties.getGroupsRetryBackoffMilliseconds())))
-            .doOnError(throwable -> log.error("Group service failed on request to get groups", throwable))
+            .doOnError(throwable -> log.error("Group service failed on request to get groups. Error: {}",
+                throwable.getMessage()))
             .onErrorMap(throwable -> new GroupServiceUnavailableException(
                 "Group service failed on request to get groups"));
     }
@@ -58,7 +59,8 @@ public class GroupServiceClient {
             .retryWhen(
                 Retry.backoff(clientProperties.getGroupsRetryAttempts(),
                     Duration.ofMillis(clientProperties.getGroupsRetryBackoffMilliseconds())))
-            .doOnError(throwable -> log.error("Group service failed on request to get groups as events", throwable))
+            .doOnError(throwable -> log.error("Group service failed on request to get groups as events: {}",
+                throwable.getMessage()))
             .onErrorMap(throwable -> new GroupServiceUnavailableException(
                 "Group service failed on request to get groups as events"));
     }
@@ -78,7 +80,7 @@ public class GroupServiceClient {
                 Retry.backoff(clientProperties.getGroupsRetryAttempts(),
                     Duration.ofMillis(clientProperties.getGroupsRetryBackoffMilliseconds())))
             .doOnError(throwable -> log.error("Error while getting my member from group service: {}",
-                throwable.getMessage(), throwable))
+                throwable.getMessage()))
             .onErrorMap(throwable -> new GroupServiceUnavailableException(
                 "Group service failed on request to get my member"));
     }

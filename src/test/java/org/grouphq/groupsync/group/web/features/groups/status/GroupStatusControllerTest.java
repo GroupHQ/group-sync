@@ -54,7 +54,7 @@ class GroupStatusControllerTest {
         given(groupEventPublisher.publishGroupUpdateStatusRequest(
             argThat(publishedRequest -> originalRequest.getAggregateId().equals(publishedRequest.getAggregateId())
                     && originalRequest.getNewStatus().equals(publishedRequest.getNewStatus())
-                    && !originalRequest.getEventId().equals(publishedRequest.getEventId())
+                    && originalRequest.getEventId().equals(publishedRequest.getEventId())
                     && !originalRequest.getCreatedDate().equals(publishedRequest.getCreatedDate())
                     && !originalRequest.getWebsocketId().equals(publishedRequest.getWebsocketId())
             ))

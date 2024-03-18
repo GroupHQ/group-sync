@@ -1,6 +1,5 @@
 package org.grouphq.groupsync.group.sync.state;
 
-import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.config.ClientProperties;
@@ -33,9 +32,6 @@ public class DormantState extends State {
     public Mono<Void> onRequest() {
         initialRequest.compareAndSet(null,
             groupInitialStateService.initializeGroupState()
-                .timeout(Duration.ofMillis(clientProperties.getGroupsTimeoutMilliseconds()))
-                .doOnError(throwable -> log.error("Error initializing group state", throwable))
-                .doOnSuccess(empty -> log.info("Successfully initialized group state"))
                 .doFinally(signalType -> {
                     if (signalType == SignalType.ON_COMPLETE) {
                         groupInitialStateService.setState(new ReadyState(groupInitialStateService));

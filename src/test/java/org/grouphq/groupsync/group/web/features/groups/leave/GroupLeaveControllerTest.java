@@ -52,7 +52,7 @@ class GroupLeaveControllerTest {
         given(groupEventPublisher.publishGroupLeaveRequest(
             argThat(publishedRequest -> originalRequest.getAggregateId().equals(publishedRequest.getAggregateId())
                     && originalRequest.getMemberId().equals(publishedRequest.getMemberId())
-                    && !originalRequest.getEventId().equals(publishedRequest.getEventId())
+                    && originalRequest.getEventId().equals(publishedRequest.getEventId())
                     && !originalRequest.getCreatedDate().equals(publishedRequest.getCreatedDate())
                     && !originalRequest.getWebsocketId().equals(publishedRequest.getWebsocketId())
             ))

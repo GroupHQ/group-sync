@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import java.time.Duration;
@@ -10,6 +11,7 @@ import org.grouphq.groupsync.group.sync.GroupUpdateService;
 import org.grouphq.groupsync.group.sync.state.GroupInitialStateService;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -67,6 +69,7 @@ class GroupSyncControllerTest {
         given(groupUpdateService.publicUpdatesStream()).willReturn(sink.asFlux());
 
         StepVerifier.create(groupSyncController.getPublicUpdates())
+            .assertNext(emptyEvent -> assertThat(emptyEvent.eventType()).isEqualTo(EventType.NOTHING))
             .expectNext(publicOutboxEvent)
             .expectNext(publicOutboxEvent)
             .expectNext(publicOutboxEvent)

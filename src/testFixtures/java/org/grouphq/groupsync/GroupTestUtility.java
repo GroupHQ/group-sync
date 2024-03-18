@@ -211,7 +211,34 @@ public final class GroupTestUtility {
     /**
      * Overloaded method for {@link #generateFullMemberDetails()}.
      *
-     * @see #generateFullGroupDetails(GroupStatus status) for more info.
+     * @see #generateFullMemberDetails(String username, Long groupId) for more info.
+     *
+     * @param websocketId the user's unique connection id
+     * @param username the username of the member.
+     * @param groupId the group ID the member belongs to.
+     *
+     * @return A group object with all details.
+     */
+    public static Member generateFullMemberDetails(UUID websocketId, String username, Long groupId) {
+
+        return new Member(
+            FAKER.number().randomNumber(12, true),
+            websocketId,
+            username == null ? FAKER.name().firstName() : username,
+            groupId,
+            MemberStatus.ACTIVE,
+            null,
+            Instant.now(),
+            Instant.now(),
+            OWNER,
+            OWNER,
+            0
+        );
+    }
+
+
+    /**
+     * Generates a random group join request object.
      *
      * @return a GroupJoinRequestEvent object with all details.
      */

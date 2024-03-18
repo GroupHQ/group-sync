@@ -2,7 +2,6 @@ package org.grouphq.groupsync.group.web.features;
 
 import java.security.Principal;
 import java.time.Instant;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
@@ -32,7 +31,7 @@ public class GroupLeaveController {
         return createLeaveRequestWithCurrentAuthorization(groupLeaveRequestEvent)
             .flatMap(eventWithAuth -> groupEventPublisher.publishGroupLeaveRequest(eventWithAuth)
                 .doOnSuccess(unused -> log.debug("Sent leave request: {}", eventWithAuth))
-                .doOnError(throwable -> log.error("Error while leaving group.", throwable))
+                .doOnError(throwable -> log.error("Error while leaving group: {}", throwable.getMessage()))
                 .onErrorMap(unusedThrowable -> new InternalServerError("Cannot leave group"))
             );
     }
@@ -42,7 +41,7 @@ public class GroupLeaveController {
         return userService.getUserAuthentication()
             .map(Principal::getName)
             .flatMap(websocketId -> Mono.just(new GroupLeaveRequestEvent(
-                UUID.randomUUID(),
+                groupLeaveRequestEvent.getEventId(),
                 groupLeaveRequestEvent.getAggregateId(),
                 groupLeaveRequestEvent.getMemberId(),
                 websocketId,

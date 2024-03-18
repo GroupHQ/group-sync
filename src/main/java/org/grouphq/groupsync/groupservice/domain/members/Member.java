@@ -40,10 +40,6 @@ public record Member(
 
     int version
 ) implements EventDataModel {
-    public static Member of(String username, Long groupId) {
-        return new Member(null, UUID.randomUUID(), username, groupId, MemberStatus.ACTIVE, null,
-            null, null, null, null, 0);
-    }
 
     public static Member of(UUID websocketId, String username, Long groupId) {
         return new Member(null, websocketId, username, groupId,
