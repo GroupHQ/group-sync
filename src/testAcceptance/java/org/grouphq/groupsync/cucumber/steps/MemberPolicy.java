@@ -1,6 +1,5 @@
 package org.grouphq.groupsync.cucumber.steps;
 
-import com.github.javafaker.Faker;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -8,6 +7,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.rsocket.metadata.WellKnownMimeType;
+import net.datafaker.Faker;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.config.SecurityConfig;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
