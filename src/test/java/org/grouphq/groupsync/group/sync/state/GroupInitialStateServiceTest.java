@@ -145,13 +145,13 @@ class GroupInitialStateServiceTest {
          TODO: Non-deterministic and subject to flakiness. Need to find a better way to test this.
          The issue here is that the sink emission may not cause the current state of events to update
          before requesting them again if the update takes too long.
-         If you remove the delayElement call, this test will likely pass when run in isolation and with
+         If you remove the delaySubscription call, this test will likely pass when run in isolation and with
          other tests in this file. But when running all unit tests, it usually fails.
          */
         StepVerifier.create(groupInitialStateService.requestCurrentEvents()
                 .then(Mono.fromRunnable(() -> updateSink.tryEmitNext(publicOutboxEventDisbanded)))
-                .delayElement(Duration.of(2500, ChronoUnit.MILLIS))
-                .thenMany(groupInitialStateService.requestCurrentEvents())
+                .thenMany(groupInitialStateService.requestCurrentEvents()
+                    .delaySubscription(Duration.of(1000, ChronoUnit.MILLIS)))
             )
             .verifyComplete();
     }

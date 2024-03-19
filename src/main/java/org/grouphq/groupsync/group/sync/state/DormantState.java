@@ -4,7 +4,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.config.ClientProperties;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.SignalType;
 
 /**
  * State representing when {@link GroupInitialStateService} is waiting for a client to trigger the initialization.
@@ -30,21 +29,21 @@ public class DormantState extends State {
      */
     @Override
     public Mono<Void> onRequest() {
-        initialRequest.compareAndSet(null,
-            groupInitialStateService.initializeGroupState()
-                .doFinally(signalType -> {
-                    if (signalType == SignalType.ON_COMPLETE) {
-                        groupInitialStateService.setState(new ReadyState(groupInitialStateService));
-                    } else if (signalType == SignalType.ON_ERROR) {
-                        groupInitialStateService.setState(
-                            new DormantState(groupInitialStateService, clientProperties));
-                    }
-                }).cache()
-        );
+        return Mono.defer(() -> {
+            initialRequest.compareAndSet(null,
+                groupInitialStateService.initializeGroupState()
+                    .doOnSuccess(unused -> groupInitialStateService.setState(
+                        new ReadyState(groupInitialStateService)))
+                    .doOnError(error -> groupInitialStateService.setState(
+                        new DormantState(groupInitialStateService, clientProperties)))
+                    .cache());
 
-        final Mono<Void> cachedRequest = initialRequest.get();
+            final Mono<Void> cachedRequest = initialRequest.get();
 
-        groupInitialStateService.setState(new LoadingState(groupInitialStateService, cachedRequest));
-        return cachedRequest;
+            groupInitialStateService.setState(new LoadingState(groupInitialStateService, cachedRequest));
+
+            return cachedRequest;
+        });
     }
+
 }
