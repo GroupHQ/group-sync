@@ -40,10 +40,6 @@ public record Member(
 
     int version
 ) implements EventDataModel {
-    public static Member of(String username, Long groupId) {
-        return new Member(null, UUID.randomUUID(), username, groupId, MemberStatus.ACTIVE, null,
-            null, null, null, null, 0);
-    }
 
     public static Member of(UUID websocketId, String username, Long groupId) {
         return new Member(null, websocketId, username, groupId,
@@ -52,10 +48,13 @@ public record Member(
     }
 
     public static PublicMember toPublicMember(Member member) {
-        return new PublicMember(
-            member.id(), member.username(), member.groupId(),
-            member.memberStatus(), member.createdDate().toString(),
-            member.exitedDate() == null ? null : member.exitedDate().toString()
-        );
+        return PublicMember.builder()
+            .id(member.id())
+            .username(member.username())
+            .groupId(member.groupId())
+            .memberStatus(member.memberStatus())
+            .joinedDate(member.createdDate().toString())
+            .exitedDate(member.exitedDate() == null ? null : member.exitedDate().toString())
+            .build();
     }
 }

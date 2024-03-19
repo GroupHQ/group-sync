@@ -5,5 +5,6 @@ package org.grouphq.groupsync.groupservice.domain.outbox.enums;
  */
 public enum AggregateType {
     GROUP,
-    MEMBER
+    MEMBER,
+    NONE
 }

@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.sync;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,16 +9,21 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.SocketPolicy;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.config.ClientProperties;
 import org.grouphq.groupsync.group.domain.GroupServiceUnavailableException;
+import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
+import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +46,6 @@ class GroupServiceClientTest {
 
     @Mock
     private ClientProperties clientProperties;
-
 
     private GroupServiceClient groupServiceClient;
 
@@ -106,6 +111,48 @@ class GroupServiceClientTest {
         final Flux<Group> groups = groupServiceClient.getGroups();
 
         StepVerifier.create(groups)
+            .expectError(GroupServiceUnavailableException.class)
+            .verify(Duration.ofSeconds(1));
+    }
+
+    @Test
+    @DisplayName("When there are active groups, then return a list of active groups as events")
+    void whenActiveGroupsExistThenReturnActiveGroupsAsEvents() throws JsonProcessingException {
+        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(10_000L);
+
+        final PublicOutboxEvent[] testEvents = Stream.generate(
+            () -> {
+                final Group group = GroupTestUtility.generateFullGroupDetailsWithMembers(GroupStatus.ACTIVE);
+                final OutboxEvent outboxEvent = GroupTestUtility.generateOutboxEvent(
+                    group.id(), group, EventType.GROUP_CREATED);
+                return PublicOutboxEvent.convertOutboxEvent(outboxEvent);
+            }
+        ).limit(5).toArray(PublicOutboxEvent[]::new);
+
+        final var eventsAsJson = objectMapper.writeValueAsString(testEvents);
+
+        final var mockResponse = new MockResponse()
+            .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .setBody(eventsAsJson);
+
+        mockWebServer.enqueue(mockResponse);
+
+        StepVerifier.create(groupServiceClient.getGroupsAsEvents().collectList())
+            .assertNext(events -> assertThat(events).containsExactlyInAnyOrderElementsOf(List.of(testEvents)))
+            .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Timeout and retry appropriately when group service does not respond with groups as events")
+    void whenGroupServiceTimesOutOnGroupsAsEventsFetchThenReturnException() {
+        given(clientProperties.getGroupsTimeoutMilliseconds()).willReturn(1L);
+
+        final var mockResponse = new MockResponse()
+            .setSocketPolicy(SocketPolicy.NO_RESPONSE);
+
+        mockWebServer.enqueue(mockResponse);
+
+        StepVerifier.create(groupServiceClient.getGroupsAsEvents())
             .expectError(GroupServiceUnavailableException.class)
             .verify(Duration.ofSeconds(1));
     }

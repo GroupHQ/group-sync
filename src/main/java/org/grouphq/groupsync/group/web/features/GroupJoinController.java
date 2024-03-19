@@ -2,7 +2,6 @@ package org.grouphq.groupsync.group.web.features;
 
 import java.security.Principal;
 import java.time.Instant;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
@@ -32,7 +31,7 @@ public class GroupJoinController {
         return createJoinRequestWithCurrentAuthorization(groupJoinRequestEvent)
             .flatMap(eventWithAuth -> groupEventPublisher.publishGroupJoinRequest(eventWithAuth)
                 .doOnSuccess(unused -> log.debug("Sent join request: {}", eventWithAuth))
-                .doOnError(throwable -> log.error("Error while joining group.", throwable))
+                .doOnError(throwable -> log.error("Error while joining group: {}", throwable.getMessage()))
                 .onErrorMap(unusedThrowable -> new InternalServerError("Cannot join group"))
             );
     }
@@ -42,7 +41,7 @@ public class GroupJoinController {
         return userService.getUserAuthentication()
             .map(Principal::getName)
             .flatMap(websocketId -> Mono.just(new GroupJoinRequestEvent(
-                UUID.randomUUID(),
+                groupJoinRequestEvent.getEventId(),
                 groupJoinRequestEvent.getAggregateId(),
                 groupJoinRequestEvent.getUsername(),
                 websocketId,

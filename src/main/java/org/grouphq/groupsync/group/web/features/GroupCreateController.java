@@ -2,7 +2,6 @@ package org.grouphq.groupsync.group.web.features;
 
 import java.security.Principal;
 import java.time.Instant;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.grouphq.groupsync.group.event.GroupEventPublisher;
@@ -32,7 +31,7 @@ public class GroupCreateController {
         return createCreateRequestWithCurrentAuthorization(groupCreateRequestEvent)
             .flatMap(eventWithAuth -> groupEventPublisher.publishGroupCreateRequest(eventWithAuth)
                 .doOnSuccess(unused -> log.debug("Sent create request: {}", eventWithAuth))
-                .doOnError(throwable -> log.error("Error while creating group.", throwable))
+                .doOnError(throwable -> log.error("Error while creating group: {}", throwable.getMessage()))
                 .onErrorMap(unusedThrowable -> new InternalServerError("Cannot create group"))
             );
     }
@@ -42,7 +41,7 @@ public class GroupCreateController {
         return userService.getUserAuthentication()
             .map(Principal::getName)
             .flatMap(websocketId -> Mono.just(new GroupCreateRequestEvent(
-                UUID.randomUUID(),
+                groupCreateRequestEvent.getEventId(),
                 groupCreateRequestEvent.getTitle(),
                 groupCreateRequestEvent.getDescription(),
                 groupCreateRequestEvent.getMaxGroupSize(),

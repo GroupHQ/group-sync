@@ -93,7 +93,7 @@ class GroupStatusControllerIntegrationTest {
             .satisfies(forwardedRequest -> {
                 assertThat(forwardedRequest.getAggregateId()).isEqualTo(1L);
                 assertThat(forwardedRequest.getNewStatus()).isEqualTo(GroupStatus.DISBANDED);
-                assertThat(forwardedRequest.getEventId()).isNotEqualTo(originalRequest.getEventId());
+                assertThat(forwardedRequest.getEventId()).isEqualTo(originalRequest.getEventId());
                 assertThat(forwardedRequest.getCreatedDate()).isAfter(originalRequest.getCreatedDate());
                 assertThat(forwardedRequest.getWebsocketId()).isEqualTo(USER_ID);
             });

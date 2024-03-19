@@ -8,5 +8,6 @@ public enum EventType {
     GROUP_UPDATED,
     GROUP_DISBANDED,
     MEMBER_JOINED,
-    MEMBER_LEFT
+    MEMBER_LEFT,
+    NOTHING
 }

@@ -41,7 +41,6 @@ class GroupCreateControllerTest {
 
     private static final String INTERNAL_SERVER_ERROR_SUFFIX = """
              because the server has encountered an unexpected error.
-            Rest assured, this will be investigated.
             """;
     private static final String DUMMY_MESSAGE = "This message should NOT be returned to the user!";
 
@@ -54,7 +53,7 @@ class GroupCreateControllerTest {
             argThat(publishedRequest -> originalRequest.getTitle().equals(publishedRequest.getTitle())
                 && originalRequest.getDescription().equals(publishedRequest.getDescription())
                 && originalRequest.getMaxGroupSize() == publishedRequest.getMaxGroupSize()
-                && !originalRequest.getEventId().equals(publishedRequest.getEventId())
+                && originalRequest.getEventId().equals(publishedRequest.getEventId())
                 && !originalRequest.getCreatedDate().equals(publishedRequest.getCreatedDate())
                 && !originalRequest.getCreatedBy().equals(publishedRequest.getCreatedBy())
                 && !originalRequest.getWebsocketId().equals(publishedRequest.getWebsocketId())

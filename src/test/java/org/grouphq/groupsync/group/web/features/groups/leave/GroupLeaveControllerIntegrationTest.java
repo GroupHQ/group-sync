@@ -90,7 +90,7 @@ class GroupLeaveControllerIntegrationTest {
             .satisfies(forwardedRequest -> {
                 assertThat(forwardedRequest.getAggregateId()).isEqualTo(originalRequest.getAggregateId());
                 assertThat(forwardedRequest.getMemberId()).isEqualTo(originalRequest.getMemberId());
-                assertThat(forwardedRequest.getEventId()).isNotEqualTo(originalRequest.getEventId());
+                assertThat(forwardedRequest.getEventId()).isEqualTo(originalRequest.getEventId());
                 assertThat(forwardedRequest.getCreatedDate()).isAfter(originalRequest.getCreatedDate());
                 assertThat(forwardedRequest.getWebsocketId()).isEqualTo(USER_ID);
             });

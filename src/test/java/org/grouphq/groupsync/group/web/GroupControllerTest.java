@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.config.SecurityConfig;
@@ -41,7 +42,7 @@ class GroupControllerTest {
             GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE)
         };
 
-        given(groupFetchService.getGroups()).willReturn(Flux.just(testGroups));
+        given(groupFetchService.getGroups()).willReturn(Flux.fromIterable(List.of(testGroups)));
 
         final String credentials = UUID.randomUUID() + ":password";
         final String authorization = Base64.getEncoder().encodeToString(credentials.getBytes());

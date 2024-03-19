@@ -207,7 +207,8 @@ public class MemberPolicy {
             .value(groups -> {
                 final var targetGroup =
                     groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
-                assertThat(targetGroup.members()).noneMatch(memberInGroup -> memberInGroup.id().equals(member.id()));
+                assertThat(targetGroup.members())
+                    .noneMatch(memberInGroup -> memberInGroup.getGroupId().equals(member.id()));
             });
     }
 
@@ -260,7 +261,7 @@ public class MemberPolicy {
                 final var targetGroup =
                     groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
                 assertThat(targetGroup.members()).satisfiesOnlyOnce(
-                    memberInList -> assertThat(memberInList.id()).isEqualTo(member.id()));
+                    memberInList -> assertThat(memberInList.getGroupId()).isEqualTo(member.id()));
             });
     }
 
@@ -288,7 +289,7 @@ public class MemberPolicy {
                 final Group targetGroup =
                     groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
                 assertThat(targetGroup.members()).noneSatisfy(
-                    memberInList -> assertThat(memberInList.username()).isEqualTo(member.username()));
+                    memberInList -> assertThat(memberInList.getUsername()).isEqualTo(member.username()));
             });
     }
 
@@ -322,7 +323,7 @@ public class MemberPolicy {
                 final Group targetGroup =
                     groups.stream().filter(g -> g.id().equals(group.id())).findFirst().orElseThrow();
                 assertThat(targetGroup.members()).satisfiesOnlyOnce(
-                    memberInList -> assertThat(memberInList.id()).isEqualTo(member.id()));
+                    memberInList -> assertThat(memberInList.getGroupId()).isEqualTo(member.id()));
             });
     }
 

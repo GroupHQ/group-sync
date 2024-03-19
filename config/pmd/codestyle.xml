@@ -36,7 +36,6 @@
     <rule ref="category/java/codestyle.xml/MDBAndSessionBeanNamingConvention" />
     <rule ref="category/java/codestyle.xml/MethodNamingConventions" />
     <rule ref="category/java/codestyle.xml/NoPackage" />
-    <rule ref="category/java/codestyle.xml/OnlyOneReturn" />
     <rule ref="category/java/codestyle.xml/PackageCase" />
     <rule ref="category/java/codestyle.xml/PrematureDeclaration" />
     <rule ref="category/java/codestyle.xml/RemoteInterfaceNamingConvention" />
@@ -88,4 +87,7 @@
 <!--  Doesn't work well with Jackson @JsonIgnoreProperties(value = {"@type"}) for records / classes -->
 <!--    <rule ref="category/java/codestyle.xml/UnnecessaryAnnotationValueElement" />-->
 
+
+<!--  Sometimes it makes more semantic sense to return early, common for guard clauses  -->
+<!--    <rule ref="category/java/codestyle.xml/OnlyOneReturn" />-->
 </ruleset>

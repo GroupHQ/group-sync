@@ -80,4 +80,17 @@
         <packageUrl regex="true">^pkg:maven/org\.codehaus\.plexus/plexus\-container\-default@.*$</packageUrl>
         <cve>CVE-2022-4244</cve>
     </suppress>
+
+<!--  Relates to the following class which we don't use:    -->
+<!--  https://docs.spring.io/spring-security/site/docs/4.0.x/apidocs/org/springframework/security/access/vote/AuthenticatedVoter.html  -->
+<!--  While Spring Security v. 6.2.3 doesn't have this vulnerability, we delegate version management to Spring Boot plugins  -->
+<!--  Upgrading may risk compatibility issues. Anyway, this being a relatively new vulnerability, it's likely to be  -->
+<!--  automatically resolved in the near future with the Spring Boot dependency management plugins  -->
+    <suppress>
+        <notes><![CDATA[
+   file name: spring-security-core-6.2.2.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-core@.*$</packageUrl>
+        <vulnerabilityName>CVE-2024-22257</vulnerabilityName>
+    </suppress>
 </suppressions>

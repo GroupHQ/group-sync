@@ -2,9 +2,11 @@ package org.grouphq.groupsync.groupservice.domain.outbox;
 
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
@@ -27,6 +29,7 @@ import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
  */
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor
+@Builder
 @Data
 public class OutboxEvent {
     private final UUID eventId;
@@ -43,6 +46,26 @@ public class OutboxEvent {
                                  String websocketId) {
         return new OutboxEvent(eventId, aggregateId, websocketId, aggregateType,
             eventType, eventData, eventStatus, Instant.now());
+    }
+
+    public static OutboxEvent convertEventDataToPublic(OutboxEvent outboxEvent) {
+        return switch (outboxEvent.getEventType()) {
+            case MEMBER_JOINED, MEMBER_LEFT -> convertMember(outboxEvent);
+            default -> outboxEvent;
+        };
+    }
+
+    private static OutboxEvent convertMember(OutboxEvent outboxEvent) {
+        return new OutboxEventBuilder()
+            .eventId(outboxEvent.getEventId())
+            .aggregateId(outboxEvent.getAggregateId())
+            .websocketId(outboxEvent.getWebsocketId())
+            .aggregateType(outboxEvent.getAggregateType())
+            .eventType(outboxEvent.getEventType())
+            .eventData(Member.toPublicMember((Member) outboxEvent.getEventData()))
+            .eventStatus(outboxEvent.getEventStatus())
+            .createdDate(outboxEvent.getCreatedDate())
+            .build();
     }
 
 }

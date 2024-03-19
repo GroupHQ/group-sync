@@ -1,5 +1,6 @@
 package org.grouphq.groupsync.group.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import java.time.Duration;
@@ -7,8 +8,10 @@ import org.grouphq.groupsync.GroupTestUtility;
 import org.grouphq.groupsync.group.domain.PublicOutboxEvent;
 import org.grouphq.groupsync.group.security.UserService;
 import org.grouphq.groupsync.group.sync.GroupUpdateService;
+import org.grouphq.groupsync.group.sync.state.GroupInitialStateService;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventStatus;
+import org.grouphq.groupsync.groupservice.domain.outbox.enums.EventType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -20,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.test.context.annotation.SecurityTestExecutionListeners;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
 
@@ -32,10 +36,21 @@ class GroupSyncControllerTest {
     private UserService userService;
 
     @Mock
+    private GroupInitialStateService groupInitialStateService;
+
+    @Mock
     private GroupUpdateService groupUpdateService;
 
     @InjectMocks
     private GroupSyncController groupSyncController;
+
+    @Test
+    @DisplayName("Test ping")
+    void testPing() {
+        StepVerifier.create(groupSyncController.ping())
+            .expectNext(true)
+            .verifyComplete();
+    }
 
     @Test
     @DisplayName("Test streaming outbox events to all clients")
@@ -50,9 +65,11 @@ class GroupSyncControllerTest {
         sink.tryEmitNext(publicOutboxEvent);
         sink.tryEmitNext(publicOutboxEvent);
 
+        given(groupInitialStateService.requestCurrentEvents()).willReturn(Flux.empty());
         given(groupUpdateService.publicUpdatesStream()).willReturn(sink.asFlux());
 
         StepVerifier.create(groupSyncController.getPublicUpdates())
+            .assertNext(emptyEvent -> assertThat(emptyEvent.eventType()).isEqualTo(EventType.NOTHING))
             .expectNext(publicOutboxEvent)
             .expectNext(publicOutboxEvent)
             .expectNext(publicOutboxEvent)
