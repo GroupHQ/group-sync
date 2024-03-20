@@ -1,5 +1,3 @@
-_This README is a work in progress. Some steps may be incomplete or missing_
-
 # group-sync
 ## Contents
 - [Synopsis](#Synopsis)
@@ -38,13 +36,19 @@ _This README is a work in progress. Some steps may be incomplete or missing_
 
 ## Synopsis
 Group Sync manages RSocket connections for users to keep in-sync with the latest group changes using Spring Security 
-RSocket. The service acts as a mediator between the user and Group Service. Any requests for groups or a user’s current 
-member takes place through Group Sync, which forwards the request to the Group Service REST API.
+RSocket. The service acts as a mediator between the user and group related information posted by other services (such as [Group Service]([url](https://github.com/GroupHQ/group-service))). 
+Any requests for group-related info takes place through Group Sync.
 
 ### Synchronization Flow
 The main purpose of Group Sync is to forward events published by Group Service, as well as to 
 publish its own events to an event broker. Once a user establishes an RSocket connection to Group Sync, 
-the service sends the user a stream of public and private events via the request-stream model of the RSocket protocol. 
+the service sends the user a stream of public and private events via the request-stream model of the RSocket protocol.
+
+
+Group Sync maintains its own state of groups. When the first request is received from a user for a stream of group updates,
+Group Sync fetches the latest group info and keeps an in-memory snapshot of the current group state. This state is returned to the user,
+followed by any group updates over the lifecycle of the stream. The current group state is kept up-to-date by listening on the same
+update stream. This strategy allows all users to keep up-to-date with the latest group info from just one group fetch request by Group Sync.
 
 #### Public and Private Events
 Public events involve any successful action that occurs and should be shown to users, such as a group being created
@@ -55,14 +59,13 @@ created for a user when they join the group, allowing them to know which member 
 
 #### Join and Leave Requests
 Along with streams of events, Group Sync currently allows users to send requests to join or leave groups, as well as 
-to retrieve a user’s current member. Join and leave requests use the fire-and-forget request model, where the client 
-should expect no immediate response. Instead, a response is sent through their private update stream once the request 
-succeeds or fails. 
+to retrieve a user’s current member. Join and leave requests are published to the event queue to be processed asynchronously.
+The results of these requests is sent back on both the public and private event streams (note, realized it's not really a 
+good idea to process it asynchronously since an immediate response is expected. will need to change this eventually).
 
 #### Retrieving Current Member Info
-For retrieving a user’s current member, the request-response model is used. The client uses their RSocket connection
-to authenticate their request for their current member. A response is returned with the user's member info if they
-have one. This information includes the current group a user's member is in.
+For retrieving a user’s current member, the client uses their RSocket connection to authenticate their request for 
+their current member. A response is returned with the user's member info if they have one. This information includes the current group a user's member is in.
 
 ## Setting up the Development Environment
 
@@ -92,19 +95,19 @@ for instructions on setting that up.
 When developing new features, it's recommended to follow a test-driven development approach using the classicist style
 of testing. What this means is:
 1. Prioritize writing tests first over code. At the very minimum, write out test cases for the changes you want to
-   make. This will help you think through the design of your changes, and will help you catch defects early on.
+   make. This will help you think through the design of your changes and catch defects early on.
 2. Avoid excessive mocking. Mocks are useful for isolating your code from external dependencies, but they can also
    make your tests brittle and hard to maintain. If you find yourself mocking a lot, it may be a sign that the class
    under test is more suitable for integration testing. If you are mocking out an external service, consider using
    a Testcontainer for simulating the service as a fake type of [test double](https://martinfowler.com/bliki/TestDouble.html)*.
 3. Write tests, implement, and then most importantly, refactor and review. It's easy to get caught up in
-   messy code to write code that pass tests. Always take the time to review your code after implementing a feature.
+   messy code to write code that pass tests. Take the time to review your code after implementing a feature.
 
 
 *When testing the event-messaging system with an event broker, use the Spring Cloud Stream Test Binder.
 All messaging with the event broker takes place through Spring Cloud Stream. Instead of testing the dependency itself,
 rely on the Spring Cloud Stream Test Binder to simulate the broker. This will allow you to test the messaging system
-without having to worry about the sending and receiving of messages. See the `GroupEventForwarderIntegrationTest` class
+without having to worry about the sending and receiving of messages. See the `GroupSyncSocketIntegrationTest` class
 for an example of this. See the [Spring Cloud Stream Test Binder documentation](https://docs.spring.io/spring-cloud-stream/reference/spring-cloud-stream/spring_integration_test_binder.html)
 for more information on the test binder.
 
@@ -121,7 +124,7 @@ When pushing a commit to any branch, the following checks are run:
 For code style, quality, and dependency vulnerability checks, you can view a detailed report on these checks once
 they have completed by navigating to the build/reports directory.
 You can run these checks with the following commands (These commands are compatible with the bash terminal. If you are
-using a different terminal, you may need to modify the commands to work with your terminal):
+using a different terminal, you may need to modify the commands to work in that terminal environment):
 
 #### Code Style
 ```bash
@@ -162,7 +165,7 @@ kustomize build k8s/overlays/observability | kubeconform -strict -summary -outpu
 
 It's recommended to add these commands to your IDE as separate run configurations for quick access.
 Make sure you do not commit these run configurations to the version control system, especially
-any that may contain sensitive info (such as an NVD API key for the dependency vulnerability check).
+any that may contain sensitive info (such as the NVD API key for the dependency vulnerability check).
 
 ### User Automated Tests & Regression Testing
 For any features that introduce a new user-facing feature, it's recommended to add automated tests for them to
@@ -170,8 +173,8 @@ the [GroupHQ Continuous Testing Test Suite](https://github.com/GroupHQ/grouphq-c
 For more information on how to write these tests, see the associated READEME of that repository.
 
 When any pull request is opened, a request is sent to the [GroupHQ Continuous Testing Proxy Server](https://github.com/GroupHQ/grouphq-continuous-testing-proxy-server)
-to run the test suite against the pull request. The length of a test run is expected to vary over time,
-but expect it to take no more than an hour (at the time of writing, it takes about 20 minutes).
+to run the test suite against the pull request. The length of a test run is expected to vary over time, 
+but it's currently pretty quick at just under 10 minutes for around ~200 tests.
 Once the test run is complete, the results will be posted to the pull request, including a link to the test results to
 review if needed.
 
