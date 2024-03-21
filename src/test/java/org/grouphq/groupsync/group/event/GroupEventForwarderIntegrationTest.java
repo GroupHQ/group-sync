@@ -116,9 +116,12 @@ class GroupEventForwarderIntegrationTest {
     @DisplayName("Forwards events to the outbox event update failed sink")
     void forwardsEventsToTheOutboxEventUpdateFailedSink() {
         final List<OutboxEvent> outboxEvents = List.of(
-            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED),
-            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED)
+            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED, EventType.GROUP_CREATED),
+            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED, EventType.GROUP_UPDATED),
+            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED, EventType.GROUP_DISBANDED),
+            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED, EventType.MEMBER_JOINED),
+            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED, EventType.MEMBER_LEFT),
+            GroupTestUtility.generateOutboxEvent(USER, EventStatus.FAILED, EventType.NOTHING)
         );
 
         final Flux<OutboxEvent> groupUpdatesStream =

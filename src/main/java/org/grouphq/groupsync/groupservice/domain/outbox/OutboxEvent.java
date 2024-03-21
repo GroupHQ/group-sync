@@ -49,6 +49,10 @@ public class OutboxEvent {
     }
 
     public static OutboxEvent convertEventDataToPublic(OutboxEvent outboxEvent) {
+        if (outboxEvent.getEventStatus() == EventStatus.FAILED) {
+            return outboxEvent;
+        }
+
         return switch (outboxEvent.getEventType()) {
             case MEMBER_JOINED, MEMBER_LEFT -> convertMember(outboxEvent);
             default -> outboxEvent;

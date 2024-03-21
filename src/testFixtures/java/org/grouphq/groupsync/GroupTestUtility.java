@@ -9,6 +9,7 @@ import org.grouphq.groupsync.groupservice.domain.groups.Group;
 import org.grouphq.groupsync.groupservice.domain.groups.GroupStatus;
 import org.grouphq.groupsync.groupservice.domain.members.Member;
 import org.grouphq.groupsync.groupservice.domain.members.MemberStatus;
+import org.grouphq.groupsync.groupservice.domain.outbox.ErrorData;
 import org.grouphq.groupsync.groupservice.domain.outbox.EventDataModel;
 import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.grouphq.groupsync.groupservice.domain.outbox.enums.AggregateType;
@@ -134,7 +135,7 @@ public final class GroupTestUtility {
 
         final Set<PublicMember> members = new HashSet<>();
         for (int i = 0; i < maxCapacity / 2; i++) {
-            final Member member = generateFullMemberDetails(faker.name().username(), groupId);
+            final Member member = generateFullMemberDetails(faker.name().firstName(), groupId);
             final PublicMember publicMember = Member.toPublicMember(member);
             members.add(publicMember);
         }
@@ -435,8 +436,9 @@ public final class GroupTestUtility {
     }
 
     /**
-     * Generates an outbox event with the given EventDataModel.
+     * Generates an outbox event with the given parameters.
      *
+     * @param aggregateId the aggregate ID to use
      * @param eventData the event data to use
      * @param eventType the event type to use
      *
@@ -458,10 +460,41 @@ public final class GroupTestUtility {
     }
 
     /**
+     * Generates an outbox event with the given parameters.
+     *
+     * @param aggregateId the aggregate ID to use
+     * @param eventData the event data to use
+     * @param eventType the event type to use
+     * @param eventStatus the event status to use
+     *
+     * @return an OutboxEvent object with all details.
+     */
+    public static OutboxEvent generateOutboxEvent(
+        Long aggregateId, EventDataModel eventData, EventType eventType, EventStatus eventStatus) {
+
+        return new OutboxEvent(
+            UUID.randomUUID(),
+            aggregateId,
+            UUID.randomUUID().toString(),
+            AggregateType.GROUP,
+            eventType,
+            eventData,
+            eventStatus,
+            Instant.now()
+        );
+    }
+
+    /**
      * Overloaded method for {@link #generateOutboxEvent()} ()}.
      */
     public static OutboxEvent generateOutboxEvent(String webSocketId, EventStatus eventStatus) {
-        final EventDataModel eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
+        EventDataModel eventData;
+
+        if (eventStatus == EventStatus.FAILED) {
+            eventData = new ErrorData("Error message");
+        } else {
+            eventData = GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
+        }
 
         return new OutboxEvent(
             UUID.randomUUID(),
@@ -469,6 +502,35 @@ public final class GroupTestUtility {
             webSocketId,
             AggregateType.GROUP,
             EventType.GROUP_CREATED,
+            eventData,
+            eventStatus,
+            Instant.now()
+        );
+    }
+
+    /**
+     * Overloaded method for {@link #generateOutboxEvent()} ()}.
+     */
+    public static OutboxEvent generateOutboxEvent(String webSocketId, EventStatus eventStatus, EventType eventType) {
+        EventDataModel eventData;
+
+        if (eventStatus == EventStatus.FAILED) {
+            eventData = new ErrorData("Error message");
+        } else {
+            eventData = switch (eventType) {
+                case GROUP_CREATED -> GroupTestUtility.generateFullGroupDetails(GroupStatus.ACTIVE);
+                case GROUP_UPDATED, GROUP_DISBANDED -> GroupTestUtility.generateFullGroupDetails(GroupStatus.DISBANDED);
+                case MEMBER_JOINED, MEMBER_LEFT -> GroupTestUtility.generateFullMemberDetails();
+                case NOTHING -> null;
+            };
+        }
+
+        return new OutboxEvent(
+            UUID.randomUUID(),
+            FAKER.number().randomNumber(12, true),
+            webSocketId,
+            AggregateType.GROUP,
+            eventType,
             eventData,
             eventStatus,
             Instant.now()
