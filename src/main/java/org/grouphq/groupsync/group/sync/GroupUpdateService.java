@@ -7,6 +7,7 @@ import org.grouphq.groupsync.groupservice.domain.outbox.OutboxEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.BufferOverflowStrategy;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 /**
@@ -36,14 +37,20 @@ public class GroupUpdateService {
             .onBackpressureBuffer(100, BufferOverflowStrategy.DROP_OLDEST);
     }
 
-    public void sendPublicOutboxEventToAll(PublicOutboxEvent outboxEvent) {
-        final Sinks.EmitResult result = publicUpdatesSink.tryEmitNext(outboxEvent);
-        emitResultLogger("PUBLIC", outboxEvent, result);
+    public Mono<Void> sendPublicOutboxEventToAll(PublicOutboxEvent outboxEvent) {
+        return Mono.defer(() ->
+            Mono.just(publicUpdatesSink.tryEmitNext(outboxEvent))
+                .doOnNext(result -> emitResultLogger("PUBLIC", outboxEvent, result))
+                .then()
+        );
     }
 
-    public void sendOutboxEventToEventOwner(OutboxEvent outboxEvent) {
-        final Sinks.EmitResult result = userUpdatesSink.tryEmitNext(outboxEvent);
-        emitResultLogger(outboxEvent.getEventStatus().toString(), outboxEvent, result);
+    public Mono<Void> sendOutboxEventToEventOwner(OutboxEvent outboxEvent) {
+        return Mono.defer(() ->
+            Mono.just(userUpdatesSink.tryEmitNext(outboxEvent))
+                .doOnNext(result -> emitResultLogger("USER", outboxEvent, result))
+                .then()
+        );
     }
 
     private void emitResultLogger(String eventName,

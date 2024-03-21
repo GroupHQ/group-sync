@@ -26,25 +26,23 @@ public class GroupEventForwarder {
     @Bean
     public Consumer<Flux<OutboxEvent>> processedEvents() {
         return outboxEvents ->
-            outboxEvents.flatMap(this::forwardUpdate)
-                .doOnError(throwable -> log.error("Error while forwarding events. "
-                                                  + "Attempting to resume. Error: {}", throwable.getMessage()))
-                .onErrorResume(throwable -> Flux.empty())
+            outboxEvents.flatMap(outboxEvent ->
+                    forwardUpdate(outboxEvent)
+                        .doOnError(throwable -> log.error("Error while forwarding events. "
+                            + "Attempting to resume. Error: {}", throwable.getMessage()))
+                        .onErrorResume(throwable -> Mono.empty())
+                )
                 .subscribe();
     }
 
     private Mono<Void> forwardUpdate(OutboxEvent outboxEvent) {
-        switch (outboxEvent.getEventStatus()) {
-            case SUCCESSFUL -> {
-                groupUpdateService.sendPublicOutboxEventToAll(
-                    PublicOutboxEvent.convertOutboxEvent(outboxEvent));
-                groupUpdateService.sendOutboxEventToEventOwner(OutboxEvent.convertEventDataToPublic(outboxEvent));
-            }
+        return Mono.defer(() -> switch (outboxEvent.getEventStatus()) {
+            case SUCCESSFUL ->
+                groupUpdateService.sendPublicOutboxEventToAll(PublicOutboxEvent.convertOutboxEvent(outboxEvent))
+                    .then(groupUpdateService.sendOutboxEventToEventOwner(
+                        OutboxEvent.convertEventDataToPublic(outboxEvent)));
             case FAILED -> groupUpdateService
                 .sendOutboxEventToEventOwner(OutboxEvent.convertEventDataToPublic(outboxEvent));
-            default -> log.error("Unknown event status: {}", outboxEvent.getEventStatus());
-        }
-
-        return Mono.empty();
+        });
     }
 }

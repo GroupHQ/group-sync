@@ -1,6 +1,6 @@
 package org.grouphq.groupsync.group.event;
 
-import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import org.grouphq.groupsync.GroupTestUtility;
@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Tag("UnitTest")
 @ExtendWith(MockitoExtension.class)
@@ -35,8 +36,8 @@ class GroupEventForwarderTest {
         final PublicOutboxEvent publicOutboxEvent =
             PublicOutboxEvent.convertOutboxEvent(outboxEvent);
 
-        willDoNothing().given(groupUpdateService).sendPublicOutboxEventToAll(publicOutboxEvent);
-        willDoNothing().given(groupUpdateService).sendOutboxEventToEventOwner(outboxEvent);
+        given(groupUpdateService.sendPublicOutboxEventToAll(publicOutboxEvent)).willReturn(Mono.empty());
+        given(groupUpdateService.sendOutboxEventToEventOwner(outboxEvent)).willReturn(Mono.empty());
 
         groupEventForwarder.processedEvents().accept(Flux.just(outboxEvent));
 
@@ -50,7 +51,7 @@ class GroupEventForwarderTest {
         final OutboxEvent outboxEvent =
             GroupTestUtility.generateOutboxEvent("ID", EventStatus.FAILED);
 
-        willDoNothing().given(groupUpdateService).sendOutboxEventToEventOwner(outboxEvent);
+        given(groupUpdateService.sendOutboxEventToEventOwner(outboxEvent)).willReturn(Mono.empty());
 
         groupEventForwarder.processedEvents().accept(Flux.just(outboxEvent));
 

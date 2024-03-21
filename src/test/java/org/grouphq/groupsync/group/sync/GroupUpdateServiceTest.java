@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 @Tag("UnitTest")
@@ -36,8 +37,11 @@ class GroupUpdateServiceTest {
         final PublicOutboxEvent publicOutboxEvent =
             PublicOutboxEvent.convertOutboxEvent(outboxEvent);
 
-        StepVerifier.create(groupUpdateService.publicUpdatesStream())
-            .then(() -> groupUpdateService.sendPublicOutboxEventToAll(publicOutboxEvent))
+        StepVerifier.create(groupUpdateService.publicUpdatesStream()
+                .publishOn(Schedulers.boundedElastic())
+                .doOnSubscribe(subscription ->
+                    groupUpdateService.sendPublicOutboxEventToAll(publicOutboxEvent).subscribe())
+            )
             .expectNext(publicOutboxEvent)
             .thenCancel()
             .verify(Duration.ofSeconds(1));
@@ -56,8 +60,12 @@ class GroupUpdateServiceTest {
         final OutboxEvent outboxEvent =
                 GroupTestUtility.generateOutboxEvent("ID", EventStatus.FAILED);
 
-        StepVerifier.create(groupUpdateService.eventOwnerUpdateStream())
-            .then(() -> groupUpdateService.sendOutboxEventToEventOwner(outboxEvent))
+        StepVerifier.create(
+                groupUpdateService.eventOwnerUpdateStream()
+                    .publishOn(Schedulers.boundedElastic())
+                    .doOnSubscribe(subscription ->
+                        groupUpdateService.sendOutboxEventToEventOwner(outboxEvent).subscribe())
+            )
             .expectNext(outboxEvent)
             .thenCancel()
             .verify(Duration.ofSeconds(1));
