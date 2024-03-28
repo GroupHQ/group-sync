@@ -47,6 +47,11 @@ spring:
       definition: |
         processedEvents;
     stream:
+      rabbit:
+        bindings:
+          processedEvents-in-0:
+            consumer:
+              anonymous-group-prefix: ${spring.application.name}
       bindings:
         groupCreateRequests-out-0:
           destination: group-create-requests
@@ -62,7 +67,6 @@ spring:
           group: ${spring.application.name}
         processedEvents-in-0:
           destination: group-event-results
-          group: ${spring.application.name}-${random.value}
   rabbitmq:
     host: {$SPRING_RABBITMQ_HOST:localhost}
     port: 5672
